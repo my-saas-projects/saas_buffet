@@ -1,32 +1,40 @@
-# BuffetFlow - Sistema de Gestão para Buffets
+# Gemini - Project Context
 
 ## Project Overview
 
-BuffetFlow is a SaaS platform designed to simplify the management of buffets and event venues. The project is built with a modern web application architecture, clearly separating the backend from the frontend.
+This project is a SaaS platform called **BuffetFlow**, designed to manage buffets and event venues. It features a decoupled architecture with a Django/Python backend and a Next.js/TypeScript frontend. The entire environment is containerized using Docker.
 
-*   **Backend**: Developed with Django and Django Rest Framework (DRF) in Python. It is responsible for all business logic, data manipulation, and serving a RESTful API for the frontend.
-*   **Frontend**: A Single-Page Application (SPA) developed with React and TypeScript. It is responsible for the user interface, navigation experience, and communication with the backend via API.
-*   **Database**: PostgreSQL is the main database, managed by the Django ORM.
-*   **Containerization**: The development and production environment is fully containerized using Docker and Docker Compose.
+- **Backend:** Django REST Framework, serving a RESTful API.
+- **Frontend:** Next.js (React) with TypeScript, utilizing shadcn/ui for components.
+- **Database:** PostgreSQL, managed by Docker.
+- **Services:** Redis is used for caching and background tasks.
 
 ## Building and Running
 
 ### Backend (Django)
 
-1.  **Install dependencies:**
+1.  **Navigate to the backend directory:**
+    ```bash
+    cd backend
+    ```
+2.  **Activate the virtual environment:**
+    ```bash
+    source venv_saas_buffet/bin/activate
+    ```
+3.  **Install dependencies:**
     ```bash
     pip install -r requirements.txt
     ```
-2.  **Run migrations:**
+4.  **Run migrations:**
     ```bash
     python manage.py migrate
     ```
-3.  **Start the server:**
+5.  **Start the development server:**
     ```bash
-    python manage.py runserver
+    python manage.py runserver 0.0.0.0:8000
     ```
 
-### Frontend (React)
+### Frontend (Next.js)
 
 1.  **Navigate to the frontend directory:**
     ```bash
@@ -36,30 +44,40 @@ BuffetFlow is a SaaS platform designed to simplify the management of buffets and
     ```bash
     npm install
     ```
-3.  **Start the server:**
+3.  **Start the development server:**
     ```bash
-    npm start
+    npm run dev
+    ```
+
+### Docker
+
+-   **Start all services:**
+    ```bash
+    docker-compose up
+    ```
+-   **Start specific services (e.g., database and Redis):**
+    ```bash
+    docker-compose up -d db redis
     ```
 
 ## Development Conventions
 
-### API Conventions
+### API
 
-The project follows the RESTful API conventions detailed in `docs/API_CONVENTIONS.md`.
-
-*   **Endpoints**: Use plural nouns (e.g., `/api/events/`).
-*   **Data Format**: JSON with `snake_case` for keys.
-*   **Authentication**: Token-based authentication using the `Authorization` header.
-*   **HTTP Methods**:
-    *   `GET`: Retrieve resources.
-    *   `POST`: Create a new resource.
-    *   `PUT`/`PATCH`: Update a resource.
-    *   `DELETE`: Remove a resource.
+-   **Endpoints:** Plural nouns (e.g., `/api/events/`).
+-   **Authentication:** Token-based (JWT) via `Authorization: Bearer <token>` header.
+-   **Data Format:** JSON with `snake_case` for keys.
+-   **HTTP Verbs:** Standard usage (`GET`, `POST`, `PATCH`, `DELETE`).
+-   **Status Codes:** Conventional HTTP status codes are used to indicate success or failure.
 
 ### Code Style
 
-*   **Backend**: Follows the PEP 8 style guide for Python code.
-*   **Frontend**: Uses the ESLint configuration defined in `frontend/package.json`.
+-   **Backend:** Follows standard Python/Django conventions.
+-   **Frontend:** Follows standard React/TypeScript conventions.
+
+### Git Workflow
+
+-   Refer to `docs/GIT_WORKFLOW.md` for branching and commit message conventions.
 
 # BuffetFlow Project Documentation
 
