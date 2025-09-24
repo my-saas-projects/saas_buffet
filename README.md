@@ -20,16 +20,22 @@ cd saas_buffet
 
 ### 2. Configurar o Backend (Django)
 
-#### 2.1. Criar e Ativar Ambiente Virtual
+#### 2.1. Navegar para o diretório backend
 
 ```bash
-python3 -m venv venv
-source venv/bin/activate  # Linux/Mac
-# ou
-venv\Scripts\activate     # Windows
+cd backend
 ```
 
-#### 2.2. Instalar Dependências
+#### 2.2. Criar e Ativar Ambiente Virtual
+
+```bash
+python3 -m venv venv_saas_buffet
+source venv_saas_buffet/bin/activate  # Linux/Mac
+# ou
+venv_saas_buffet\Scripts\activate     # Windows
+```
+
+#### 2.3. Instalar Dependências
 
 ```bash
 pip install -r requirements.txt
@@ -208,20 +214,28 @@ O sistema utiliza **SQLite** por padrão para desenvolvimento e pode ser configu
 ## 🔧 Configurações de Desenvolvimento
 
 ### Acessar Admin Django
-1. Criar superusuário: `python manage.py createsuperuser`
-2. Acessar: `http://localhost:8000/admin/`
+1. Navegar para backend: `cd backend`
+2. Ativar ambiente virtual: `source venv_saas_buffet/bin/activate`
+3. Criar superusuário: `python manage.py createsuperuser`
+4. Acessar: `http://localhost:8000/admin/`
 
 ### Estrutura de Pastas
 ```
 saas_buffet/
-├── buffetflow/          # Configurações do Django
-├── users/               # App de usuários e empresas
-├── events/              # App de eventos e cardápios
-├── financials/          # App financeiro e dashboard
+├── backend/             # Backend Django
+│   ├── buffetflow/      # Configurações do Django
+│   ├── users/           # App de usuários e empresas
+│   ├── events/          # App de eventos e cardápios
+│   ├── financials/      # App financeiro e dashboard
+│   ├── manage.py        # Script de gerenciamento Django
+│   ├── requirements.txt # Dependências Python
+│   ├── Dockerfile       # Docker para backend
+│   └── venv_saas_buffet/# Ambiente virtual Python
 ├── frontend/            # App React TypeScript
 ├── docs/                # Documentação
 ├── plans/               # Planos de execução
-└── requirements.txt     # Dependências Python
+├── docker-compose.yml   # Orquestração Docker
+└── README.md           # Este arquivo
 ```
 
 ## 🚨 Solução de Problemas
@@ -232,7 +246,9 @@ Se houver erro de conexão com PostgreSQL, o sistema usa SQLite automaticamente.
 ### Porta em Uso
 Se as portas 8000 ou 3000 estiverem em uso:
 ```bash
-# Backend em outra porta
+# Backend em outra porta (do diretório backend/)
+cd backend
+source venv_saas_buffet/bin/activate
 python manage.py runserver 0.0.0.0:8001
 
 # Frontend em outra porta
@@ -242,7 +258,9 @@ PORT=3001 npm start
 ### Dependências
 Se houver problemas com dependências:
 ```bash
-# Backend
+# Backend (do diretório backend/)
+cd backend
+source venv_saas_buffet/bin/activate
 pip install -r requirements.txt --force-reinstall
 
 # Frontend

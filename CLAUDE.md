@@ -10,6 +10,12 @@ BuffetFlow is a SaaS platform for buffet and event management built with Django 
 
 ### Backend (Django)
 ```bash
+# From backend/ directory
+cd backend
+
+# Activate virtual environment
+source venv_saas_buffet/bin/activate
+
 # Start development server
 python manage.py runserver 0.0.0.0:8000
 
@@ -53,11 +59,13 @@ docker-compose down
 ## Architecture
 
 ### Backend Structure
-- **Django Project**: `buffetflow/` - Main settings and configuration
+- **Location**: All backend code is now located in the `backend/` directory
+- **Django Project**: `backend/buffetflow/` - Main settings and configuration
 - **Apps**:
-  - `users/` - Custom User model, Company model, authentication
-  - `events/` - Event, MenuItem, EventMenu models and management
-  - `financials/` - Cost calculations, quotes, dashboard data
+  - `backend/users/` - Custom User model, Company model, authentication
+  - `backend/events/` - Event, MenuItem, EventMenu models and management
+  - `backend/financials/` - Cost calculations, quotes, dashboard data
+- **Virtual Environment**: `backend/venv_saas_buffet/` - Isolated Python environment
 
 ### Frontend Structure
 - **React TypeScript SPA** in `frontend/`
@@ -115,8 +123,10 @@ Frontend environment:
 
 ## Testing
 
-No specific testing commands found. Use Django's built-in test runner:
+Use Django's built-in test runner from the backend directory:
 ```bash
+cd backend
+source venv_saas_buffet/bin/activate
 python manage.py test
 ```
 
