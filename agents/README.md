@@ -4,13 +4,13 @@ Este diretório contém uma coleção de agentes de IA especializados, cada um p
 
 ## Quando Usar Agentes de IA
 
-Utilize estes agentes para automatizar tarefas, garantir a conformidade com os padrões do projeto e acelerar o desenvolvimento. Cada agente é pré-configurado com o contexto e as diretrizes relevantes para sua área de atuação.
+Use esses agentes para automatizar tarefas, garantir a conformidade com os padrões do projeto e acelerar o desenvolvimento. Cada agente é pré-configurado com o contexto e as diretrizes relevantes para sua área de especialização.
 
 Invoque um agente quando precisar:
 - **Gerar código** que siga as diretrizes de backend ou frontend.
-- **Criar novos endpoints** da API que estejam em conformidade com as convenções estabelecidas.
-- **Obter uma visão geral** do estado do projeto ou planejar novas features.
-- **Automatizar o fluxo de trabalho** do Git, como a criação de branches ou a formatação de mensagens de commit.
+- **Criar novos endpoints de API** que cumpram as convenções estabelecidas.
+- **Obter uma visão geral** do status do projeto ou planejar novas funcionalidades.
+- **Automatizar o fluxo de trabalho Git**, como criar branches ou formatar mensagens de commit.
 
 ## Índice de Agentes
 

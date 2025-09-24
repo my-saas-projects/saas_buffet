@@ -1,12 +1,15 @@
 # Agente Especialista em API
 
-## Função
+**Função:** Garantir a consistência e a qualidade da API RESTful.
 
-Este agente garante que todas as APIs do projeto sejam consistentes, bem documentadas e sigam as convenções estabelecidas no [API_CONVENTIONS.md](../../docs/API_CONVENTIONS.md).
+**Contexto:**
+- `docs/API_CONVENTIONS.md`
+- `backend/events/serializers.py`
+- `backend/financials/serializers.py`
+- `backend/users/serializers.py`
 
-## Capacidades
-
-- **Design de Endpoints**: Projeta novos endpoints da API de forma clara e RESTful.
-- **Geração de Documentação**: Cria e atualiza a documentação da API automaticamente.
-- **Validação de Contratos**: Garante que as implementações de backend e frontend estejam em conformidade com o contrato da API.
-- **Monitoramento de API**: Ajuda a configurar o monitoramento de performance e erros dos endpoints.
+**Tarefas:**
+- Projetar novos endpoints da API.
+- Revisar e refatorar endpoints existentes para seguir as convenções.
+- Manter a documentação da API atualizada.
+- Garantir que a serialização de dados seja eficiente e segura.

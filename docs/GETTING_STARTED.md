@@ -1,54 +1,50 @@
-# Guia de Instalação e Configuração
+# Guia de Iniciação
 
-Este guia descreve os passos para configurar e executar o ambiente de desenvolvimento localmente.
+## Backend (Django)
 
-## Pré-requisitos
-
-Antes de começar, garanta que você tenha as seguintes ferramentas instaladas:
-
-- **Git**: Para clonar o repositório.
-- **Docker**: Para executar os containers da aplicação.
-- **Docker Compose**: Para orquestrar os containers.
-
-## Passos para Instalação
-
-1.  **Clonar o Repositório**:
+1.  **Navegue até o diretório do backend:**
     ```bash
-    git clone <URL_DO_REPOSITORIO>
-    cd saas_buffet
+    cd backend
+    ```
+2.  **Ative o ambiente virtual:**
+    ```bash
+    source venv_saas_buffet/bin/activate
+    ```
+3.  **Instale as dependências:**
+    ```bash
+    pip install -r requirements.txt
+    ```
+4.  **Execute as migrações:**
+    ```bash
+    python manage.py migrate
+    ```
+5.  **Inicie o servidor de desenvolvimento:**
+    ```bash
+    python manage.py runserver 0.0.0.0:8000
     ```
 
-2.  **Configurar Variáveis de Ambiente**:
-    O projeto utiliza um arquivo `.env` para configurar as variáveis de ambiente. Embora um arquivo de exemplo não esteja presente, você pode criar um na raiz do projeto para configurar o `SECRET_KEY` do Django, credenciais do banco de dados, etc.
+## Frontend (Next.js)
 
-3.  **Iniciar os Containers**:
-    Use o Docker Compose para construir as imagens e iniciar os serviços do backend, frontend e banco de dados.
+1.  **Navegue até o diretório do frontend:**
     ```bash
-    docker-compose up --build -d
+    cd frontend
     ```
-    O comando acima irá:
-    - Construir as imagens `backend` e `frontend`.
-    - Iniciar os containers em modo `detached` (-d).
-
-4.  **Executar as Migrações do Banco de Dados**:
-    Após os containers estarem no ar, execute as migrações do Django para criar as tabelas no banco de dados.
+2.  **Instale as dependências:**
     ```bash
-    docker-compose exec backend python manage.py migrate
+    npm install
+    ```
+3.  **Inicie o servidor de desenvolvimento:**
+    ```bash
+    npm run dev
     ```
 
-## Acessando a Aplicação
+## Docker
 
-- **Frontend**: A aplicação React estará disponível em `http://localhost:3000`.
-- **Backend API**: A API do Django estará acessível em `http://localhost:8000/api/`.
-
-## Executando Testes
-
-- **Backend (Django)**:
-  ```bash
-  docker-compose exec backend python manage.py test
-  ```
-
-- **Frontend (React)**:
-  ```bash
-  docker-compose exec frontend npm test
-  ```
+-   **Iniciar todos os serviços:**
+    ```bash
+    docker-compose up
+    ```
+-   **Iniciar serviços específicos (por exemplo, banco de dados e Redis):**
+    ```bash
+    docker-compose up -d db redis
+    ```

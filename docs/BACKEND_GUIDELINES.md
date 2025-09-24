@@ -1,41 +1,24 @@
-# Diretrizes de Desenvolvimento do Backend
+# Diretrizes do Backend
 
-Este documento define os padrões e as melhores práticas para o desenvolvimento do backend com Django e Django Rest Framework (DRF).
+O backend é construído com Django e Django REST Framework.
 
-## Linguagem e Frameworks
+## Estrutura de Diretórios
 
-- **Linguagem**: Python 3.10+
-- **Framework**: Django
-- **API**: Django Rest Framework (DRF)
+-   `buffetflow`: Contém as configurações principais do projeto Django.
+-   `events`, `financials`, `users`: São exemplos de "apps" do Django. Cada app representa um módulo da aplicação com seus próprios models, views, serializers e urls.
 
-## Estilo de Código
+## Padrões de Código
 
-- **PEP 8**: Todo o código Python deve seguir estritamente as convenções da [PEP 8](https://www.python.org/dev/peps/pep-0008/).
-- **Linters e Formatadores**: Recomenda-se o uso de ferramentas como `Black` para formatação automática e `Flake8` ou `Ruff` para linting, garantindo a consistência do código.
+-   Siga os padrões de estilo de código definidos pelo PEP 8.
+-   Use `snake_case` para nomes de variáveis, funções e módulos.
+-   Use `PascalCase` para nomes de classes.
 
-## Estrutura de Apps Django
+## Criando um Novo App
 
-- **Modularidade**: Cada funcionalidade principal do sistema deve ser encapsulada em seu próprio app Django (ex: `users`, `events`, `financials`).
-- **Nomenclatura**: Os apps devem ter nomes curtos, em letras minúsculas e no plural quando representarem um recurso.
+Para adicionar uma nova funcionalidade, crie um novo app:
 
-## Models
+```bash
+python manage.py startapp <nome_do_app>
+```
 
-- **Nomenclatura**: Nomes de modelos devem ser em `CamelCase` e no singular (ex: `Event`, `Client`).
-- **Campos**: Use nomes de campos em `snake_case`.
-- **Lógica de Negócio**: Métodos que contêm lógica de negócio específica de um modelo devem ser implementados no próprio modelo ou em um `Manager` associado.
-
-## Views e Serializers (DRF)
-
-- **Views**: Prefira o uso de `ViewSets` genéricos do DRF (ex: `ModelViewSet`) para operações CRUD padrão. Para lógica mais complexa, use `APIView`.
-- **Serializers**: Use `ModelSerializer` para serializar e desserializar modelos do Django. Validações complexas devem ser implementadas nos métodos `validate_<field>` ou `validate` do serializer.
-- **Permissões**: Utilize o sistema de permissões do DRF para controlar o acesso aos endpoints.
-
-## URLs
-
-- **Padrão de Nomenclatura**: As URLs da API devem seguir o padrão `/api/v1/<recurso>/`.
-- **Versionamento**: A API deve ser versionada na URL para facilitar futuras atualizações sem quebrar a compatibilidade com o frontend.
-
-## Testes
-
-- **Cobertura**: Todos os novos endpoints, modelos e lógicas de negócio devem ser acompanhados de testes unitários e de integração.
-- **Localização**: Os testes devem ser escritos no arquivo `tests.py` de cada app ou em um diretório `tests/` dentro do app.
+Depois de criar o app, adicione-o à lista de `INSTALLED_APPS` no arquivo `buffetflow/settings.py`.

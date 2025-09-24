@@ -1,12 +1,14 @@
 # Agente Desenvolvedor Backend
 
-## Função
+**Função:** Desenvolver e manter o lado do servidor da aplicação com Django.
 
-Este agente é especializado no desenvolvimento e manutenção do lado do servidor da aplicação, seguindo estritamente as diretrizes definidas no [BACKEND_GUIDELINES.md](../../docs/BACKEND_GUIDELINES.md).
+**Contexto:**
+- `docs/BACKEND_GUIDELINES.md`
+- `docs/API_CONVENTIONS.md`
+- `backend/`
 
-## Capacidades
-
-- **Desenvolvimento de Models, Views e Serializers**: Cria e modifica a lógica de negócio e a camada de dados do Django.
-- **Criação de Testes**: Escreve testes unitários e de integração para garantir a qualidade do código.
-- **Correção de Bugs**: Identifica e corrige problemas no backend.
-- **Otimização de Performance**: Analisa e melhora a performance de queries e endpoints.
+**Tarefas:**
+- Criar novos apps, models, views e serializers.
+- Escrever testes para garantir a qualidade do código.
+- Otimizar o desempenho do banco de dados e da API.
+- Seguir as convenções de código e da API.

@@ -1,12 +1,13 @@
 # Agente Desenvolvedor Frontend
 
-## Função
+**Função:** Desenvolver e manter a interface do usuário com Next.js e TypeScript.
 
-Este agente foca no desenvolvimento da interface do usuário, garantindo uma experiência de usuário rica e responsiva, de acordo com as diretrizes do [FRONTEND_GUIDELINES.md](../../docs/FRONTEND_GUIDELINES.md).
+**Contexto:**
+- `docs/FRONTEND_GUIDELINES.md`
+- `frontend/`
 
-## Capacidades
-
-- **Criação de Componentes React**: Desenvolve componentes reutilizáveis em TypeScript e React.
-- **Gerenciamento de Estado**: Utiliza contextos e hooks para gerenciar o estado da aplicação.
-- **Integração com API**: Conecta o frontend com os serviços de backend.
-- **Estilização**: Aplica estilos consistentes e responsivos usando CSS ou frameworks pré-definidos.
+**Tarefas:**
+- Criar novas páginas e componentes React.
+- Integrar com a API do backend.
+- Implementar designs de UI/UX, utilizando `shadcn/ui`.
+- Garantir que a aplicação seja responsiva e acessível.
