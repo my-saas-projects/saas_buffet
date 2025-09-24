@@ -56,14 +56,17 @@ export function EventForm({ companyId, onSuccess, onCancel, initialData }: Event
 
     try {
       const eventData = {
-        ...formData,
-        guest_count: parseInt(formData.guestCount),
         event_type: formData.eventType,
+        title: formData.title,
+        event_date: formData.date,
+        start_time: formData.startTime,
+        end_time: formData.endTime,
         client_name: formData.clientName,
         client_phone: formData.clientPhone,
         client_email: formData.clientEmail,
-        start_time: formData.startTime,
-        end_time: formData.endTime,
+        guest_count: parseInt(formData.guestCount),
+        venue_location: formData.venue,
+        notes: formData.notes
       }
 
       const response = await eventsAPI.create(eventData)
@@ -95,7 +98,6 @@ export function EventForm({ companyId, onSuccess, onCancel, initialData }: Event
     { value: "graduation", label: "Formatura" },
     { value: "birthday", label: "Aniversário" },
     { value: "corporate", label: "Corporativo" },
-    { value: "baptism", label: "Batizado" },
     { value: "other", label: "Outro" }
   ]
 

@@ -27,10 +27,10 @@ class Company(models.Model):
     website = models.URLField(blank=True, null=True)
     
     # Address
-    address = models.CharField(max_length=300)
-    city = models.CharField(max_length=100)
-    state = models.CharField(max_length=2)
-    postal_code = models.CharField(max_length=10)
+    address = models.CharField(max_length=300, blank=True, default='')
+    city = models.CharField(max_length=100, blank=True, default='')
+    state = models.CharField(max_length=2, blank=True, default='')
+    postal_code = models.CharField(max_length=10, blank=True, default='')
     
     # Business settings
     default_profit_margin = models.DecimalField(max_digits=5, decimal_places=2, default=30.00)

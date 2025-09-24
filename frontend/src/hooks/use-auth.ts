@@ -75,6 +75,9 @@ export function useAuth(): AuthState {
         const response = await authAPI.profile()
         const userData = response.data
 
+        // Atualizar localStorage com dados mais recentes do backend
+        localStorage.setItem('user', JSON.stringify(userData))
+        
         setUser(userData)
         if (userData.company) {
           setCompany(userData.company)

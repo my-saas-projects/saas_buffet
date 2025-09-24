@@ -447,24 +447,6 @@
   .row-start-1 {
     grid-row-start: 1;
   }
-  .container {
-    width: 100%;
-    @media (width >= 40rem) {
-      max-width: 40rem;
-    }
-    @media (width >= 48rem) {
-      max-width: 48rem;
-    }
-    @media (width >= 64rem) {
-      max-width: 64rem;
-    }
-    @media (width >= 80rem) {
-      max-width: 80rem;
-    }
-    @media (width >= 96rem) {
-      max-width: 96rem;
-    }
-  }
   .-mx-1 {
     margin-inline: calc(var(--spacing) * -1);
   }
@@ -670,9 +652,6 @@
   }
   .h-16 {
     height: calc(var(--spacing) * 16);
-  }
-  .h-80 {
-    height: calc(var(--spacing) * 80);
   }
   .h-\[1\.15rem\] {
     height: 1.15rem;

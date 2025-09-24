@@ -38,6 +38,8 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+backend/venv_saas_buffet/
+
 
 # IDE
 .vscode/
@@ -85,3 +87,5 @@ celerybeat.pid
 
 # Redis dump
 dump.rdb
+
+frontend/.next/

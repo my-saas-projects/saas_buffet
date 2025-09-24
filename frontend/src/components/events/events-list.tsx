@@ -25,19 +25,19 @@ import { eventsAPI } from "@/services/api"
 interface Event {
   id: string
   title: string
-  eventType: string
-  date: string
-  startTime: string
-  endTime: string
-  clientName: string
-  clientPhone: string
-  clientEmail?: string
-  guestCount: number
-  venue?: string
+  event_type: string
+  event_date: string
+  start_time: string
+  end_time: string
+  client_name: string
+  client_phone: string
+  client_email?: string
+  guest_count: number
+  venue_location?: string
   status: string
   notes?: string
-  createdAt: string
-  updatedAt: string
+  created_at: string
+  updated_at: string
   company: {
     id: string
     name: string
@@ -112,7 +112,7 @@ export function EventsList({ companyId, onEventSelect, onCreateNew }: EventsList
 
   const filteredEvents = events.filter(event => {
     const matchesSearch = event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         event.clientName.toLowerCase().includes(searchTerm.toLowerCase())
+                         event.client_name.toLowerCase().includes(searchTerm.toLowerCase())
     const matchesStatus = statusFilter === "all" || event.status === statusFilter
     
     return matchesSearch && matchesStatus
@@ -127,7 +127,8 @@ export function EventsList({ companyId, onEventSelect, onCreateNew }: EventsList
     })
   }
 
-  const formatTime = (timeString: string) => {
+  const formatTime = (timeString: string | undefined) => {
+    if (!timeString) return '--:--'
     const [hours, minutes] = timeString.split(':')
     return `${hours}:${minutes}`
   }
@@ -241,33 +242,33 @@ export function EventsList({ companyId, onEventSelect, onCreateNew }: EventsList
                         {getStatusText(event.status)}
                       </Badge>
                       <Badge variant="outline">
-                        {getEventTypeText(event.eventType)}
+                        {getEventTypeText(event.event_type)}
                       </Badge>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm text-gray-600">
                       <div className="flex items-center space-x-2">
                         <CalendarDays className="h-4 w-4" />
-                        <span>{formatDate(event.date)}</span>
+                        <span>{formatDate(event.event_date)}</span>
                       </div>
                       <div className="flex items-center space-x-2">
                         <Clock className="h-4 w-4" />
-                        <span>{formatTime(event.startTime)} - {formatTime(event.endTime)}</span>
+                        <span>{formatTime(event.start_time)} - {formatTime(event.end_time)}</span>
                       </div>
                       <div className="flex items-center space-x-2">
                         <Users className="h-4 w-4" />
-                        <span>{event.guestCount} convidados</span>
+                        <span>{event.guest_count} convidados</span>
                       </div>
                       <div className="flex items-center space-x-2">
                         <User className="h-4 w-4" />
-                        <span>{event.clientName}</span>
+                        <span>{event.client_name}</span>
                       </div>
                     </div>
 
-                    {event.venue && (
+                    {event.venue_location && (
                       <div className="flex items-center space-x-2 mt-2 text-sm text-gray-600">
                         <MapPin className="h-4 w-4" />
-                        <span>{event.venue}</span>
+                        <span>{event.venue_location}</span>
                       </div>
                     )}
                   </div>

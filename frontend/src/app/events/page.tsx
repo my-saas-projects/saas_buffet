@@ -11,19 +11,19 @@ import { useAuth } from "@/hooks/use-auth"
 interface Event {
   id: string
   title: string
-  eventType: string
-  date: string
-  startTime: string
-  endTime: string
-  clientName: string
-  clientPhone: string
-  clientEmail?: string
-  guestCount: number
-  venue?: string
+  event_type: string
+  event_date: string
+  start_time: string
+  end_time: string
+  client_name: string
+  client_phone: string
+  client_email?: string
+  guest_count: number
+  venue_location?: string
   status: string
   notes?: string
-  createdAt: string
-  updatedAt: string
+  created_at: string
+  updated_at: string
   company: {
     id: string
     name: string
@@ -122,7 +122,7 @@ export default function EventsPage() {
                         {getStatusText(selectedEvent.status)}
                       </Badge>
                       <Badge variant="outline">
-                        {getEventTypeText(selectedEvent.eventType)}
+                        {getEventTypeText(selectedEvent.event_type)}
                       </Badge>
                     </div>
                     <CardDescription>
@@ -145,12 +145,12 @@ export default function EventsPage() {
                 <CardContent className="space-y-3">
                   <div className="flex items-center space-x-2">
                     <CalendarDays className="h-4 w-4 text-gray-500" />
-                    <span className="font-medium">{formatDate(selectedEvent.date)}</span>
+                    <span className="font-medium">{formatDate(selectedEvent.event_date)}</span>
                   </div>
                   <div className="flex items-center space-x-2">
                     <Clock className="h-4 w-4 text-gray-500" />
                     <span>
-                      {formatTime(selectedEvent.startTime)} - {formatTime(selectedEvent.endTime)}
+                      {formatTime(selectedEvent.start_time)} - {formatTime(selectedEvent.end_time)}
                     </span>
                   </div>
                 </CardContent>
@@ -166,12 +166,12 @@ export default function EventsPage() {
                 <CardContent className="space-y-3">
                   <div className="flex items-center space-x-2">
                     <Users className="h-4 w-4 text-gray-500" />
-                    <span>{selectedEvent.guestCount} convidados</span>
+                    <span>{selectedEvent.guest_count} convidados</span>
                   </div>
-                  {selectedEvent.venue && (
+                  {selectedEvent.venue_location && (
                     <div className="flex items-center space-x-2">
                       <MapPin className="h-4 w-4 text-gray-500" />
-                      <span>{selectedEvent.venue}</span>
+                      <span>{selectedEvent.venue_location}</span>
                     </div>
                   )}
                 </CardContent>
@@ -190,7 +190,7 @@ export default function EventsPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <p className="text-sm font-medium text-gray-500">Nome</p>
-                    <p className="text-lg">{selectedEvent.clientName}</p>
+                    <p className="text-lg">{selectedEvent.client_name}</p>
                   </div>
                   <div>
                     <p className="text-sm font-medium text-gray-500">Telefone</p>

@@ -74,7 +74,7 @@ export default function OnboardingPage() {
 
       const userData = JSON.parse(savedUser)
 
-      // Create company data
+      // Create company data (backend expects these snake_case fields)
       const companyData = {
         name: formData.companyName,
         cnpj: formData.cnpj,
@@ -83,45 +83,44 @@ export default function OnboardingPage() {
         address: formData.address,
         city: formData.city,
         state: formData.state,
-        zip_code: formData.zipCode,
+        postal_code: formData.zipCode,
         default_profit_margin: parseFloat(formData.defaultProfitMargin),
-        max_events_per_day: parseInt(formData.maxEventsPerDay),
+        max_events_per_month: parseInt(formData.maxEventsPerDay),
       }
 
       // Create company
       const companyResponse = await companiesAPI.create(companyData)
       console.log('Empresa criada:', companyResponse.data)
 
-      // Update user to mark as onboarded
-      const userUpdateData = { is_onboarded: true }
-      const userResponse = await usersAPI.update(userData.id, userUpdateData)
-      console.log('Usuário atualizado:', userResponse.data)
+      // Atualizar estado local: associar empresa criada ao usuário em localStorage
+      userData.company = companyResponse.data
+      userData.is_onboarded = true
+      localStorage.setItem('user', JSON.stringify(userData))
 
-      // Update localStorage with new user data
-      localStorage.setItem('user', JSON.stringify(userResponse.data))
-
-      // Redirect to dashboard
-      setTimeout(() => {
-        setIsLoading(false)
-        console.log('Redirecionando para dashboard...')
-        window.location.href = "/"
-      }, 1000)
+      // Forçar recarga da página para atualizar o hook useAuth
+      console.log('Redirecionando para dashboard...')
+      window.location.href = "/"
 
     } catch (error: any) {
       console.error('Erro ao completar onboarding:', error)
-
-      // Fallback: mark as onboarded locally and redirect
-      const savedUser = localStorage.getItem('user')
-      if (savedUser) {
-        const userData = JSON.parse(savedUser)
-        userData.is_onboarded = true
-        localStorage.setItem('user', JSON.stringify(userData))
+      setIsLoading(false)
+      
+      // Mostrar erro específico para o usuário
+      let errorMessage = 'Erro ao criar empresa. Verifique os dados e tente novamente.'
+      
+      if (error.response?.data?.error) {
+        errorMessage = error.response.data.error
+      } else if (error.response?.data?.detail) {
+        errorMessage = error.response.data.detail
+      } else if (error.response?.data) {
+        // Se houver erros de campo específicos
+        const errors = Object.values(error.response.data).flat()
+        if (errors.length > 0) {
+          errorMessage = errors.join(', ')
+        }
       }
-
-      setTimeout(() => {
-        setIsLoading(false)
-        window.location.href = "/"
-      }, 1000)
+      
+      alert(errorMessage)
     }
   }
 
@@ -255,7 +254,7 @@ export default function OnboardingPage() {
                   <div className="space-y-2">
                     <Label htmlFor="state">Estado</Label>
                     <Select onValueChange={(value) => updateFormData("state", value)}>
-                      <SelectTrigger>
+                      <SelectTrigger id="state">
                         <SelectValue placeholder="Selecione" />
                       </SelectTrigger>
                       <SelectContent>
@@ -328,12 +327,12 @@ export default function OnboardingPage() {
                   <div className="space-y-4">
                     <h3 className="font-medium">Configurações Operacionais</h3>
                     <div className="space-y-2">
-                      <Label htmlFor="maxEventsPerDay">Máximo de Eventos por Dia</Label>
+                    <Label htmlFor="maxEventsPerDay">Máximo de Eventos por Dia</Label>
                       <Select 
                         value={formData.maxEventsPerDay} 
                         onValueChange={(value) => updateFormData("maxEventsPerDay", value)}
                       >
-                        <SelectTrigger>
+                      <SelectTrigger id="maxEventsPerDay">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>

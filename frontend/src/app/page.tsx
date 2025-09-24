@@ -13,11 +13,11 @@ export default function Dashboard() {
   const [activeTab, setActiveTab] = useState("overview")
 
   useEffect(() => {
-    // Se usuário está autenticado mas não fez onboarding, redirecionar
-    if (user && !user.isOnboarded && !authLoading) {
+    // Se usuário autenticado ainda não possui empresa, redireciona para onboarding
+    if (user && !company && !authLoading) {
       window.location.href = "/onboarding"
     }
-  }, [user, authLoading])
+  }, [user, company, authLoading])
 
   if (authLoading) {
     return (
