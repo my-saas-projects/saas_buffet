@@ -182,3 +182,68 @@ def remove_menu_from_event_view(request, event_id, menu_item_id):
     
     event_menu.delete()
     return Response({'message': 'Menu item removed from event'}, status=status.HTTP_204_NO_CONTENT)
+
+@api_view(['GET', 'POST'])
+@permission_classes([permissions.IsAuthenticated])
+def event_menu_items_view(request, event_id):
+    """Get or add menu items for a specific event"""
+    event = get_object_or_404(Event, id=event_id, company=request.user.company)
+
+    if request.method == 'GET':
+        event_menus = EventMenu.objects.filter(event=event).select_related('menu_item')
+        serializer = EventMenuSerializer(event_menus, many=True)
+        return Response(serializer.data)
+
+    elif request.method == 'POST':
+        menu_item_id = request.data.get('menu_item')
+        quantity = request.data.get('quantity', 1)
+
+        if not menu_item_id:
+            return Response({'error': 'menu_item is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        menu_item = get_object_or_404(MenuItem, id=menu_item_id, company=request.user.company)
+
+        event_menu, created = EventMenu.objects.get_or_create(
+            event=event,
+            menu_item=menu_item,
+            defaults={'quantity': quantity}
+        )
+
+        if not created:
+            event_menu.quantity = quantity
+            event_menu.save()
+
+        serializer = EventMenuSerializer(event_menu)
+        return Response(serializer.data, status=status.HTTP_201_CREATED if created else status.HTTP_200_OK)
+
+@api_view(['GET', 'POST', 'PUT'])
+@permission_classes([permissions.IsAuthenticated])
+def event_cost_calculation_view(request, event_id):
+    """Get or create/update cost calculation for an event"""
+    event = get_object_or_404(Event, id=event_id, company=request.user.company)
+
+    # Import here to avoid circular imports
+    from financials.models import CostCalculation
+    from financials.serializers import CostCalculationSerializer
+
+    if request.method == 'GET':
+        try:
+            cost_calc = CostCalculation.objects.get(event=event)
+            serializer = CostCalculationSerializer(cost_calc)
+            return Response(serializer.data)
+        except CostCalculation.DoesNotExist:
+            return Response({'error': 'Cost calculation not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    elif request.method in ['POST', 'PUT']:
+        try:
+            cost_calc = CostCalculation.objects.get(event=event)
+            # Update existing
+            serializer = CostCalculationSerializer(cost_calc, data=request.data, partial=True)
+        except CostCalculation.DoesNotExist:
+            # Create new
+            serializer = CostCalculationSerializer(data=request.data)
+
+        if serializer.is_valid():
+            cost_calc = serializer.save(event=event, calculated_by=request.user)
+            return Response(CostCalculationSerializer(cost_calc).data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

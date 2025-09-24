@@ -3,6 +3,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
+from django.db.models import Sum
 from datetime import datetime, timedelta
 from events.models import Event
 from .models import CostCalculation, Quote, Notification, AuditLog
@@ -56,20 +57,19 @@ def cost_calculations_view(request):
 
 @api_view(['PUT', 'DELETE'])
 @permission_classes([permissions.IsAuthenticated])
-def cost_calculation_detail_view(request, event_id):
+def cost_calculation_detail_view(request, cost_id):
     try:
-        event = Event.objects.get(id=event_id, company=request.user.company)
-        cost_calc = CostCalculation.objects.get(event=event)
-    except (Event.DoesNotExist, CostCalculation.DoesNotExist):
+        cost_calc = CostCalculation.objects.get(id=cost_id, event__company=request.user.company)
+    except CostCalculation.DoesNotExist:
         return Response({'error': 'Cost calculation not found'}, status=status.HTTP_404_NOT_FOUND)
-    
+
     if request.method == 'PUT':
         serializer = CostCalculationSerializer(cost_calc, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+
     elif request.method == 'DELETE':
         cost_calc.delete()
         return Response({'message': 'Cost calculation deleted'}, status=status.HTTP_204_NO_CONTENT)
@@ -324,3 +324,60 @@ def dashboard_view(request):
     }
     
     return Response(dashboard_data)
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
+def financial_summary_view(request):
+    """
+    Financial summary view for frontend Financial page
+    """
+    if not request.user.company:
+        return Response({'error': 'No company associated'}, status=status.HTTP_400_BAD_REQUEST)
+
+    company = request.user.company
+
+    # Total quotes
+    total_quotes = Quote.objects.filter(event__company=company).count()
+
+    # Pending quotes (sent but not approved/rejected)
+    pending_quotes = Quote.objects.filter(
+        event__company=company,
+        status='sent'
+    ).count()
+
+    # Approved quotes
+    approved_quotes = Quote.objects.filter(
+        event__company=company,
+        status='approved'
+    ).count()
+
+    # Total revenue (from approved quotes)
+    total_revenue = Quote.objects.filter(
+        event__company=company,
+        status='approved'
+    ).aggregate(
+        total=Sum('total_price')
+    )['total'] or 0
+
+    # This month revenue
+    from datetime import datetime
+    this_month_start = datetime.now().replace(day=1)
+    this_month_revenue = Quote.objects.filter(
+        event__company=company,
+        status='approved',
+        approved_at__gte=this_month_start
+    ).aggregate(
+        total=Sum('total_price')
+    )['total'] or 0
+
+    # Average order value
+    average_order_value = total_revenue / approved_quotes if approved_quotes > 0 else 0
+
+    return Response({
+        'total_quotes': total_quotes,
+        'pending_quotes': pending_quotes,
+        'approved_quotes': approved_quotes,
+        'total_revenue': float(total_revenue),
+        'this_month_revenue': float(this_month_revenue),
+        'average_order_value': float(average_order_value),
+    })

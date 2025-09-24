@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Teste de Login</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 50px; }
+        .form { margin: 20px 0; }
+        input { margin: 5px 0; padding: 8px; width: 200px; }
+        button { padding: 10px 20px; background: #0070f3; color: white; border: none; cursor: pointer; }
+        button:disabled { background: #ccc; }
+        .result { margin: 20px 0; padding: 10px; background: #f0f0f0; }
+        .error { background: #ffe0e0; color: red; }
+        .success { background: #e0ffe0; color: green; }
+    </style>
+</head>
+<body>
+    <h1>Teste de Login - BuffetFlow</h1>
+    
+    <div class="form">
+        <input type="email" id="email" value="demo@buffetflow.com" placeholder="Email" /><br/>
+        <input type="password" id="password" value="demo123" placeholder="Senha" /><br/>
+        <button onclick="doLogin()" id="loginBtn">Fazer Login</button>
+    </div>
+    
+    <div id="result" class="result"></div>
+    
+    <script>
+        async function doLogin() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const btn = document.getElementById('loginBtn');
+            const result = document.getElementById('result');
+            
+            btn.disabled = true;
+            btn.textContent = 'Processando...';
+            
+            console.log('=== INICIANDO LOGIN ===');
+            console.log('Email:', email);
+            console.log('Password:', password);
+            
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email, password }),
+                });
+                
+                console.log('Response status:', response.status);
+                
+                const data = await response.json();
+                console.log('Response data:', data);
+                
+                if (response.ok) {
+                    result.className = 'result success';
+                    result.innerHTML = `
+                        <h3>Login Sucesso!</h3>
+                        <p>Usuário: ${data.user.email}</p>
+                        <p>Empresa: ${data.user.companies[0]?.name || 'N/A'}</p>
+                        <p>Redirecionando em 2 segundos...</p>
+                    `;
+                    
+                    // Salvar no localStorage
+                    localStorage.setItem('buffetflow_email', email);
+                    localStorage.setItem('buffetflow_user', JSON.stringify(data.user));
+                    
+                    // Redirecionar
+                    setTimeout(() => {
+                        if (data.user.isOnboarded) {
+                            window.location.href = '/';
+                        } else {
+                            window.location.href = '/onboarding';
+                        }
+                    }, 2000);
+                    
+                } else {
+                    result.className = 'result error';
+                    result.innerHTML = `<h3>Erro no Login</h3><p>${data.error}</p>`;
+                }
+                
+            } catch (error) {
+                console.error('Login error:', error);
+                result.className = 'result error';
+                result.innerHTML = `<h3>Erro de Conexão</h3><p>${error.message}</p>`;
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Fazer Login';
+            }
+        }
+    </script>
+</body>
+</html>
