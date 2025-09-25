@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useAuth } from "@/hooks/use-auth"
 import { EventsList } from "@/components/events/events-list"
 import { EventForm } from "@/components/events/event-form"
+import { EVENT_STATUS_COLORS, EVENT_STATUS_LABELS, EVENT_STATUS_OPTIONS } from "@/lib/constants"
 
 export default function Dashboard() {
   const { user, company, isLoading: authLoading, logout } = useAuth()
@@ -143,24 +144,11 @@ export default function Dashboard() {
   ]
 
   const getStatusColor = (status: string) => {
-    switch (status) {
-      case "confirmed": return "bg-green-100 text-green-800"
-      case "preparing": return "bg-blue-100 text-blue-800"
-      case "quote": return "bg-yellow-100 text-yellow-800"
-      default: return "bg-gray-100 text-gray-800"
-    }
+    return EVENT_STATUS_COLORS[status as keyof typeof EVENT_STATUS_COLORS] || "bg-gray-100 text-gray-800"
   }
 
   const getStatusText = (status: string) => {
-    switch (status) {
-      case "confirmed": return "Confirmado"
-      case "preparing": return "Em Preparação"
-      case "ongoing": return "Em Andamento"
-      case "completed": return "Concluído"
-      case "cancelled": return "Cancelado"
-      case "quote": return "Orçamento"
-      default: return status
-    }
+    return EVENT_STATUS_LABELS[status as keyof typeof EVENT_STATUS_LABELS] || status
   }
 
   const getEventTypeText = (eventType: string) => {
@@ -394,7 +382,9 @@ export default function Dashboard() {
                       guestCount: selectedEvent.guest_count.toString(),
                       venue: selectedEvent.venue_location || '',
                       value: selectedEvent.value?.toString() || '',
-                      notes: selectedEvent.notes || ''
+                      notes: selectedEvent.notes || '',
+                      status: selectedEvent.status,
+                      proposalValidityDate: selectedEvent.proposal_validity_date || ''
                     }}
                     onSuccess={() => {
                       setEditingEvent(false)
@@ -456,6 +446,14 @@ export default function Dashboard() {
                             {formatTime(selectedEvent.start_time)} - {formatTime(selectedEvent.end_time)}
                           </span>
                         </div>
+                        {selectedEvent.proposal_validity_date && selectedEvent.status === 'proposta_enviada' && (
+                          <div className="flex items-center space-x-2">
+                            <CalendarDays className="h-4 w-4 text-orange-500" />
+                            <span className="text-orange-600">
+                              Proposta válida até: {formatDate(selectedEvent.proposal_validity_date)}
+                            </span>
+                          </div>
+                        )}
                       </CardContent>
                     </Card>
 
@@ -528,10 +526,62 @@ export default function Dashboard() {
                   {/* Ações */}
                   <Card>
                     <CardContent className="pt-6">
-                      <div className="flex space-x-3">
-                        <Button variant="outline" onClick={() => setEditingEvent(true)}>Editar Evento</Button>
-                        <Button variant="outline">Gerar Orçamento</Button>
-                        <Button variant="destructive">Excluir Evento</Button>
+                      <div className="space-y-4">
+                        {/* Transições de Status */}
+                        <div>
+                          <h4 className="font-medium text-gray-900 mb-3">Alterar Status</h4>
+                          <div className="flex flex-wrap gap-2">
+                            {selectedEvent.status === 'proposta_pendente' && (
+                              <Button size="sm" variant="outline" className="bg-blue-50 hover:bg-blue-100">
+                                Enviar Proposta
+                              </Button>
+                            )}
+                            {selectedEvent.status === 'proposta_enviada' && (
+                              <>
+                                <Button size="sm" variant="outline" className="bg-green-50 hover:bg-green-100">
+                                  Aceitar Proposta
+                                </Button>
+                                <Button size="sm" variant="outline" className="bg-red-50 hover:bg-red-100">
+                                  Recusar Proposta
+                                </Button>
+                              </>
+                            )}
+                            {selectedEvent.status === 'proposta_aceita' && (
+                              <Button size="sm" variant="outline" className="bg-purple-50 hover:bg-purple-100">
+                                Iniciar Evento
+                              </Button>
+                            )}
+                            {selectedEvent.status === 'em_execucao' && (
+                              <Button size="sm" variant="outline" className="bg-indigo-50 hover:bg-indigo-100">
+                                Finalizar Evento
+                              </Button>
+                            )}
+                            {selectedEvent.status === 'pos_evento' && (
+                              <Button size="sm" variant="outline" className="bg-gray-50 hover:bg-gray-100">
+                                Concluir Evento
+                              </Button>
+                            )}
+                            {selectedEvent.status === 'proposta_recusada' && (
+                              <>
+                                <Button size="sm" variant="outline" className="bg-blue-50 hover:bg-blue-100">
+                                  Nova Proposta
+                                </Button>
+                                <Button size="sm" variant="outline" className="bg-gray-50 hover:bg-gray-100">
+                                  Concluir
+                                </Button>
+                              </>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Ações Gerais */}
+                        <div className="border-t pt-4">
+                          <div className="flex space-x-3">
+                            <Button variant="outline" onClick={() => setEditingEvent(true)}>Editar Evento</Button>
+                            <Button variant="outline">Gerar Orçamento</Button>
+                            <Button variant="destructive">Excluir Evento</Button>
+                          </div>
+                        </div>
                       </div>
                     </CardContent>
                   </Card>

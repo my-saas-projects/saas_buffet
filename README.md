@@ -2,14 +2,15 @@
 
 Sistema completo para gestão de buffets de festas, desenvolvido com Django REST Framework e React TypeScript.
 
-## 🚀 Como Inicializar o Sistema
+## 🚀 Como Inicializar o Sistema com Docker
+
+O BuffetFlow é totalmente containerizado, simplificando a configuração e execução do ambiente de desenvolvimento.
 
 ### Pré-requisitos
 
-- Python 3.11+
-- Node.js 16+
-- Git
-- Docker (opcional, para PostgreSQL)
+-   Docker e Docker Compose
+-   Git
+-   Node.js 16+ (para o frontend)
 
 ### 1. Clonar o Repositório
 
@@ -18,113 +19,55 @@ git clone <url-do-repositorio>
 cd saas_buffet
 ```
 
-### 2. Configurar o Backend (Django)
+### 2. Iniciar o Ambiente de Desenvolvimento
 
-#### 2.1. Navegar para o diretório backend
-
-```bash
-cd backend
-```
-
-#### 2.2. Criar e Ativar Ambiente Virtual
+Com o Docker instalado, inicie todos os serviços (Backend, Banco de Dados e Redis) com um único comando:
 
 ```bash
-python3 -m venv venv_saas_buffet
-source venv_saas_buffet/bin/activate  # Linux/Mac
-# ou
-venv_saas_buffet\Scripts\activate     # Windows
+docker-compose up --build
 ```
 
-#### 2.3. Instalar Dependências
+Após a execução, os seguintes serviços estarão disponíveis:
+-   **Backend (API):** `http://localhost:8000`
+-   **Banco de Dados (PostgreSQL):** `localhost:5432`
+-   **Redis:** `localhost:6379`
+
+### 3. Comandos Comuns do Backend
+
+Para executar comandos `manage.py`, como migrações e criação de superusuário, utilize `docker-compose exec`:
 
 ```bash
-pip install -r requirements.txt
+# Para executar migrações do banco de dados:
+docker-compose exec web python manage.py migrate
+
+# Para criar um superusuário (acesso ao Admin):
+docker-compose exec web python manage.py createsuperuser
 ```
 
-#### 2.3. Configurar Variáveis de Ambiente
+### 4. Iniciar o Frontend
 
-Copie o arquivo `.env` de exemplo (ou crie um novo):
+O frontend é executado localmente e se conecta ao backend containerizado.
 
-```bash
-cp .env.example .env  # se existir
-# ou crie o arquivo .env com:
-```
+#### 4.1. Navegar para o Diretório
 
-**Conteúdo do arquivo `.env`:**
-```env
-DEBUG=True
-SECRET_KEY=django-insecure-*x7a$@vi*yn(e@77cuz_kc-pzi*&z+sot(-1w1uwj0)kr435*&
-ALLOWED_HOSTS=localhost,127.0.0.1,0.0.0.0
-REDIS_URL=redis://localhost:6379/0
-
-# Para usar PostgreSQL (opcional):
-# DATABASE_URL=postgresql://buffetflow_user:buffetflow_pass@localhost:5432/buffetflow_db
-```
-
-#### 2.4. Executar Migrações
-
-```bash
-python manage.py migrate
-```
-
-#### 2.5. Criar Superusuário (Opcional)
-
-```bash
-python manage.py createsuperuser
-```
-
-#### 2.6. Iniciar o Servidor Django
-
-```bash
-python manage.py runserver 0.0.0.0:8000
-```
-
-O backend estará disponível em: `http://localhost:8000`
-
-### 3. Configurar o Frontend (React)
-
-#### 3.1. Navegar para o Diretório do Frontend
-
+Em um **novo terminal**, a partir da raiz do projeto:
 ```bash
 cd frontend
 ```
 
-#### 3.2. Instalar Dependências
+#### 4.2. Instalar Dependências
 
 ```bash
 npm install
 ```
 
-#### 3.3. Configurar Variáveis de Ambiente
-
-Verifique se o arquivo `.env` no frontend está configurado:
-
-```env
-REACT_APP_API_URL=http://localhost:8000/api
-GENERATE_SOURCEMAP=false
-```
-
-#### 3.4. Iniciar o Servidor React
+#### 4.3. Iniciar o Servidor
 
 ```bash
-npm start
+npm run dev
 ```
 
-O frontend estará disponível em: `http://localhost:3000`
-
-## 🐳 Usando Docker (Opcional)
-
-### Para PostgreSQL + Redis
-
-```bash
-docker-compose up -d db redis
-```
-
-### Para todo o sistema
-
-```bash
-docker-compose up
-```
+O frontend estará acessível em `http://localhost:3000`.
 
 ## 📋 Funcionalidades Implementadas
 

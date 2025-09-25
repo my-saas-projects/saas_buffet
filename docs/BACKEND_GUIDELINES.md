@@ -15,10 +15,10 @@ O backend é construído com Django e Django REST Framework.
 
 ## Criando um Novo App
 
-Para adicionar uma nova funcionalidade, crie um novo app:
+Para adicionar uma nova funcionalidade, crie um novo app usando `docker-compose exec`:
 
 ```bash
-python manage.py startapp <nome_do_app>
+docker-compose exec web python manage.py startapp <nome_do_app>
 ```
 
 Depois de criar o app, adicione-o à lista de `INSTALLED_APPS` no arquivo `buffetflow/settings.py`.

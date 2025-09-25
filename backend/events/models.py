@@ -12,11 +12,13 @@ class Event(models.Model):
     ]
     
     STATUS_CHOICES = [
-        ('draft', 'Rascunho'),
-        ('confirmed', 'Confirmado'),
-        ('in_progress', 'Em Andamento'),
-        ('completed', 'Concluído'),
-        ('cancelled', 'Cancelado'),
+        ('proposta_pendente', 'Proposta Pendente'),
+        ('proposta_enviada', 'Proposta Enviada'),
+        ('proposta_recusada', 'Proposta Recusada'),
+        ('proposta_aceita', 'Proposta Aceita'),
+        ('em_execucao', 'Evento em Execução'),
+        ('pos_evento', 'Pós Evento'),
+        ('concluido', 'Evento Concluído'),
     ]
     
     company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name='events')
@@ -40,7 +42,8 @@ class Event(models.Model):
     venue_location = models.CharField(max_length=300, null=True, blank=True)
     
     # Status and pricing
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='draft')
+    status = models.CharField(max_length=30, choices=STATUS_CHOICES, default='proposta_pendente')
+    proposal_validity_date = models.DateField(null=True, blank=True)
     estimated_cost = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     final_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     value = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
@@ -64,7 +67,7 @@ class Event(models.Model):
         overlapping_events = Event.objects.filter(
             company=self.company,
             event_date=self.event_date,
-            status__in=['confirmed', 'in_progress']
+            status__in=['proposta_aceita', 'em_execucao']
         ).exclude(pk=self.pk)
         
         for event in overlapping_events:

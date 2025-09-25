@@ -6,12 +6,24 @@ from django.db.models import Q
 from datetime import datetime, date
 from .models import Event, MenuItem, EventMenu
 from .serializers import (
-    EventSerializer, 
-    EventCreateSerializer, 
+    EventSerializer,
+    EventCreateSerializer,
     EventListSerializer,
     MenuItemSerializer,
     EventMenuSerializer
 )
+
+def validate_event_status_change(event_data):
+    """
+    Validate status changes and required fields
+    """
+    status_val = event_data.get('status')
+    proposal_validity_date = event_data.get('proposal_validity_date')
+
+    if status_val == 'proposta_enviada' and not proposal_validity_date:
+        return {'proposal_validity_date': ['Este campo é obrigatório quando o status é "Proposta Enviada".']}
+
+    return None
 
 @api_view(['GET', 'POST'])
 @permission_classes([permissions.IsAuthenticated])
@@ -52,7 +64,12 @@ def events_view(request):
     elif request.method == 'POST':
         if not request.user.company:
             return Response({'error': 'No company associated'}, status=status.HTTP_400_BAD_REQUEST)
-        
+
+        # Validate status change
+        validation_errors = validate_event_status_change(request.data)
+        if validation_errors:
+            return Response(validation_errors, status=status.HTTP_400_BAD_REQUEST)
+
         serializer = EventCreateSerializer(data=request.data)
         if serializer.is_valid():
             event = serializer.save(
@@ -72,6 +89,11 @@ def event_detail_view(request, event_id):
         return Response(serializer.data)
     
     elif request.method == 'PUT':
+        # Validate status change
+        validation_errors = validate_event_status_change(request.data)
+        if validation_errors:
+            return Response(validation_errors, status=status.HTTP_400_BAD_REQUEST)
+
         serializer = EventCreateSerializer(event, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()

@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { CalendarDays, Clock, Users, MapPin, User, X } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { eventsAPI } from "@/services/api"
+import { EVENT_STATUS, EVENT_STATUS_OPTIONS, EventStatus } from "@/lib/constants"
 
 interface EventFormData {
   eventType: string
@@ -24,6 +25,8 @@ interface EventFormData {
   venue: string
   value: string
   notes: string
+  status: EventStatus
+  proposalValidityDate: string
 }
 
 interface EventFormProps {
@@ -48,7 +51,9 @@ export function EventForm({ companyId, eventId, onSuccess, onCancel, initialData
     guestCount: initialData?.guestCount || "",
     venue: initialData?.venue || "",
     value: initialData?.value || "",
-    notes: initialData?.notes || ""
+    notes: initialData?.notes || "",
+    status: EVENT_STATUS.PROPOSTA_PENDENTE,
+    proposalValidityDate: ""
   })
 
   const { toast } = useToast()
@@ -70,7 +75,9 @@ export function EventForm({ companyId, eventId, onSuccess, onCancel, initialData
         guest_count: parseInt(formData.guestCount),
         venue_location: formData.venue,
         value: formData.value ? parseFloat(formData.value) : null,
-        notes: formData.notes
+        notes: formData.notes,
+        status: formData.status,
+        proposal_validity_date: formData.proposalValidityDate || null
       }
 
       const response = eventId
@@ -296,6 +303,46 @@ export function EventForm({ companyId, eventId, onSuccess, onCancel, initialData
                   placeholder="1500.00"
                 />
               </div>
+            </div>
+          </div>
+
+          {/* Status e Proposta */}
+          <div className="space-y-4">
+            <h3 className="font-medium text-gray-900 border-b pb-2">Status e Proposta</h3>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="status">Status do Evento *</Label>
+                <Select
+                  value={formData.status}
+                  onValueChange={(value) => updateField("status", value as EventStatus)}
+                  required
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {EVENT_STATUS_OPTIONS.map(option => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {formData.status === EVENT_STATUS.PROPOSTA_ENVIADA && (
+                <div className="space-y-2">
+                  <Label htmlFor="proposalValidityDate">Data de Validade da Proposta *</Label>
+                  <Input
+                    id="proposalValidityDate"
+                    type="date"
+                    value={formData.proposalValidityDate}
+                    onChange={(e) => updateField("proposalValidityDate", e.target.value)}
+                    required
+                  />
+                </div>
+              )}
             </div>
           </div>
 

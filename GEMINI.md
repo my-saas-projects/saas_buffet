@@ -9,32 +9,35 @@ This project is a SaaS platform called **BuffetFlow**, designed to manage buffet
 - **Database:** PostgreSQL, managed by Docker.
 - **Services:** Redis is used for caching and background tasks.
 
-## Building and Running
+## Building and Running with Docker
 
-### Backend (Django)
+The entire development environment is managed via Docker Compose.
 
-1.  **Navigate to the backend directory:**
-    ```bash
-    cd backend
-    ```
-2.  **Activate the virtual environment:**
-    ```bash
-    source venv_saas_buffet/bin/activate
-    ```
-3.  **Install dependencies:**
-    ```bash
-    pip install -r requirements.txt
-    ```
-4.  **Run migrations:**
-    ```bash
-    python manage.py migrate
-    ```
-5.  **Start the development server:**
-    ```bash
-    python manage.py runserver 0.0.0.0:8000
-    ```
+### 1. Start All Services
 
-### Frontend (Next.js)
+From the project root directory, run:
+
+```bash
+docker-compose up --build
+```
+
+This command builds the images and starts the containers for the backend, database, and Redis.
+
+### 2. Backend Management Commands
+
+To run Django management commands, use `docker-compose exec`:
+
+```bash
+# Run database migrations
+docker-compose exec web python manage.py migrate
+
+# Create a superuser
+docker-compose exec web python manage.py createsuperuser
+```
+
+### 3. Frontend Development
+
+The frontend is run locally and connects to the containerized backend.
 
 1.  **Navigate to the frontend directory:**
     ```bash
@@ -47,17 +50,6 @@ This project is a SaaS platform called **BuffetFlow**, designed to manage buffet
 3.  **Start the development server:**
     ```bash
     npm run dev
-    ```
-
-### Docker
-
--   **Start all services:**
-    ```bash
-    docker-compose up
-    ```
--   **Start specific services (e.g., database and Redis):**
-    ```bash
-    docker-compose up -d db redis
     ```
 
 ## Development Conventions

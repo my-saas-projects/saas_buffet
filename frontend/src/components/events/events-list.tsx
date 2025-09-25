@@ -22,41 +22,20 @@ import {
 } from "lucide-react"
 import { EventForm } from "./event-form"
 import { eventsAPI } from "@/services/api"
-
-interface Event {
-  id: string
-  title: string
-  event_type: string
-  event_date: string
-  start_time: string
-  end_time: string
-  client_name: string
-  client_phone: string
-  client_email?: string
-  guest_count: number
-  venue_location?: string
-  value?: number
-  status: string
-  notes?: string
-  created_at: string
-  updated_at: string
-  company: {
-    id: string
-    name: string
-  }
-}
+import { EVENT_STATUS_COLORS, EVENT_STATUS_LABELS, EVENT_STATUS_OPTIONS, EventStatus } from "@/lib/constants"
+import { EventListItem } from "@/lib/types"
 
 interface EventsListProps {
   companyId: string
-  onEventSelect?: (event: Event) => void
+  onEventSelect?: (event: EventListItem) => void
   onCreateNew?: () => void
 }
 
 export function EventsList({ companyId, onEventSelect, onCreateNew }: EventsListProps) {
-  const [events, setEvents] = useState<Event[]>([])
+  const [events, setEvents] = useState<EventListItem[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
-  const [editingEvent, setEditingEvent] = useState<Event | null>(null)
+  const [editingEvent, setEditingEvent] = useState<EventListItem | null>(null)
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState<string>("all")
 
@@ -77,28 +56,12 @@ export function EventsList({ companyId, onEventSelect, onCreateNew }: EventsList
     }
   }
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "confirmed": return "bg-green-100 text-green-800"
-      case "preparing": return "bg-blue-100 text-blue-800"
-      case "ongoing": return "bg-purple-100 text-purple-800"
-      case "completed": return "bg-gray-100 text-gray-800"
-      case "cancelled": return "bg-red-100 text-red-800"
-      case "quote": return "bg-yellow-100 text-yellow-800"
-      default: return "bg-gray-100 text-gray-800"
-    }
+  const getStatusColor = (status: EventStatus) => {
+    return EVENT_STATUS_COLORS[status] || "bg-gray-100 text-gray-800"
   }
 
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case "confirmed": return "Confirmado"
-      case "preparing": return "Em Preparação"
-      case "ongoing": return "Em Andamento"
-      case "completed": return "Concluído"
-      case "cancelled": return "Cancelado"
-      case "quote": return "Orçamento"
-      default: return status
-    }
+  const getStatusText = (status: EventStatus) => {
+    return EVENT_STATUS_LABELS[status] || status
   }
 
   const getEventTypeText = (eventType: string) => {
@@ -161,7 +124,9 @@ export function EventsList({ companyId, onEventSelect, onCreateNew }: EventsList
           guestCount: editingEvent.guest_count.toString(),
           venue: editingEvent.venue_location || '',
           value: editingEvent.value?.toString() || '',
-          notes: editingEvent.notes || ''
+          notes: '',
+          status: editingEvent.status,
+          proposalValidityDate: editingEvent.proposal_validity_date || ''
         } : undefined}
         onSuccess={() => {
           setShowForm(false)
@@ -212,12 +177,11 @@ export function EventsList({ companyId, onEventSelect, onCreateNew }: EventsList
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todos Status</SelectItem>
-                  <SelectItem value="quote">Orçamento</SelectItem>
-                  <SelectItem value="confirmed">Confirmado</SelectItem>
-                  <SelectItem value="preparing">Em Preparação</SelectItem>
-                  <SelectItem value="ongoing">Em Andamento</SelectItem>
-                  <SelectItem value="completed">Concluído</SelectItem>
-                  <SelectItem value="cancelled">Cancelado</SelectItem>
+                  {EVENT_STATUS_OPTIONS.map(option => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -268,7 +232,7 @@ export function EventsList({ companyId, onEventSelect, onCreateNew }: EventsList
                   <div className="flex-1">
                     <div className="flex items-center space-x-3 mb-2">
                       <h3 className="text-lg font-medium text-gray-900">{event.title}</h3>
-                      <Badge className={getStatusColor(event.status)}>
+                      <Badge variant="outline" className={getStatusColor(event.status)}>
                         {getStatusText(event.status)}
                       </Badge>
                       <Badge variant="outline">
