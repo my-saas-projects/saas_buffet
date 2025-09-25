@@ -11,14 +11,16 @@ import { EventsList } from "@/components/events/events-list"
 import { EventForm } from "@/components/events/event-form"
 import { ClientsList } from "@/components/clients/clients-list"
 import { ClientDetails } from "@/components/clients/client-details"
+import { ClientForm } from "@/components/clients/client-form"
 import { EVENT_STATUS_COLORS, EVENT_STATUS_LABELS, EVENT_STATUS_OPTIONS } from "@/lib/constants"
 
 export default function Dashboard() {
   const { user, company, isLoading: authLoading, logout } = useAuth()
   const [activeTab, setActiveTab] = useState("overview")
-  const [selectedEvent, setSelectedEvent] = useState(null)
+  const [selectedEvent, setSelectedEvent] = useState<any>(null)
   const [editingEvent, setEditingEvent] = useState(false)
-  const [selectedClient, setSelectedClient] = useState(null)
+  const [selectedClient, setSelectedClient] = useState<any>(null)
+  const [editingClient, setEditingClient] = useState<any>(null)
 
   useEffect(() => {
     // Se usuário autenticado ainda não possui empresa, redireciona para onboarding
@@ -604,19 +606,51 @@ export default function Dashboard() {
           {/* Clientes */}
           <TabsContent value="clients" className="space-y-6">
             {selectedClient ? (
-              // Client Details View
-              <ClientDetails
-                clientId={selectedClient.id}
-                onBack={() => setSelectedClient(null)}
-                onEdit={(client) => {
-                  // TODO: Implementar edição de cliente no futuro
-                  console.log('Editar cliente:', client)
-                }}
-              />
+              editingClient ? (
+                // Client Form (Edit Mode)
+                <ClientForm
+                  clientId={editingClient.id}
+                  initialData={{
+                    client_type: editingClient.client_type,
+                    name: editingClient.name,
+                    full_name: editingClient.full_name || '',
+                    fantasy_name: editingClient.fantasy_name || '',
+                    corporate_name: editingClient.corporate_name || '',
+                    email: editingClient.email,
+                    phone: editingClient.phone,
+                    cpf: editingClient.cpf || '',
+                    cnpj: editingClient.cnpj || '',
+                    rg: editingClient.rg || '',
+                    state_registration: editingClient.state_registration || '',
+                    address: editingClient.address || '',
+                    zip_code: editingClient.zip_code || ''
+                  }}
+                  onSuccess={() => {
+                    setEditingClient(null)
+                    setSelectedClient(null)
+                  }}
+                  onCancel={() => {
+                    setEditingClient(null)
+                  }}
+                />
+              ) : (
+                // Client Details View
+                <ClientDetails
+                  clientId={selectedClient.id}
+                  onBack={() => setSelectedClient(null)}
+                  onEdit={(client) => {
+                    setEditingClient(client)
+                  }}
+                />
+              )
             ) : (
               // Clients List View
               <ClientsList
                 onClientSelect={setSelectedClient}
+                onEdit={(client) => {
+                  setEditingClient(client)
+                  setSelectedClient(client)
+                }}
               />
             )}
           </TabsContent>

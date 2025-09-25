@@ -227,26 +227,39 @@ export function ClientDetails({ clientId, onBack, onEdit }: ClientDetailsProps) 
                     </div>
                   </div>
 
-                  {client.address && (
-                    <div className="flex items-start space-x-3">
-                      <MapPin className="h-4 w-4 text-gray-400 mt-1" />
-                      <div>
-                        <p className="text-sm font-medium text-gray-500">Endereço</p>
-                        <p className="text-gray-900">{client.address}</p>
-                        {client.zip_code && (
-                          <p className="text-gray-600 text-sm">CEP: {client.zip_code}</p>
-                        )}
-                      </div>
+                  <div className="flex items-start space-x-3">
+                    <MapPin className={`h-4 w-4 mt-1 ${client.address ? 'text-gray-400' : 'text-gray-300'}`} />
+                    <div>
+                      <p className={`text-sm font-medium ${client.address ? 'text-gray-500' : 'text-gray-400'}`}>Endereço</p>
+                      {client.address ? (
+                        <>
+                          <p className="text-gray-900">{client.address}</p>
+                          {client.zip_code && (
+                            <p className="text-gray-600 text-sm">CEP: {client.zip_code}</p>
+                          )}
+                          {!client.zip_code && (
+                            <p className="text-gray-400 text-sm italic">CEP não informado</p>
+                          )}
+                        </>
+                      ) : (
+                        <p className="text-gray-400 italic">Não informado</p>
+                      )}
                     </div>
-                  )}
+                  </div>
 
                   <div className="flex items-start space-x-3">
                     <Calendar className="h-4 w-4 text-gray-400 mt-1" />
                     <div>
                       <p className="text-sm font-medium text-gray-500">Cliente desde</p>
                       <p className="text-gray-900">{formatDate(client.created_at)}</p>
+                      {client.updated_at && client.updated_at !== client.created_at && (
+                        <p className="text-gray-600 text-sm">
+                          Última atualização: {formatDate(client.updated_at)}
+                        </p>
+                      )}
                     </div>
                   </div>
+
                 </div>
 
                 {/* Informações Específicas */}
@@ -255,7 +268,17 @@ export function ClientDetails({ clientId, onBack, onEdit }: ClientDetailsProps) 
                     <>
                       <h4 className="font-medium text-gray-900 border-b pb-2">Informações Empresariais</h4>
 
-                      {client.corporate_name && client.fantasy_name && (
+                      {client.fantasy_name && (
+                        <div className="flex items-start space-x-3">
+                          <Building2 className="h-4 w-4 text-gray-400 mt-1" />
+                          <div>
+                            <p className="text-sm font-medium text-gray-500">Nome Fantasia</p>
+                            <p className="text-gray-900">{client.fantasy_name}</p>
+                          </div>
+                        </div>
+                      )}
+
+                      {client.corporate_name && (
                         <div className="flex items-start space-x-3">
                           <Building className="h-4 w-4 text-gray-400 mt-1" />
                           <div>
@@ -284,20 +307,70 @@ export function ClientDetails({ clientId, onBack, onEdit }: ClientDetailsProps) 
                           </div>
                         </div>
                       )}
+
+                      {/* Show empty states for missing business information */}
+                      {!client.fantasy_name && (
+                        <div className="flex items-start space-x-3">
+                          <Building2 className="h-4 w-4 text-gray-300 mt-1" />
+                          <div>
+                            <p className="text-sm font-medium text-gray-400">Nome Fantasia</p>
+                            <p className="text-gray-400 italic">Não informado</p>
+                          </div>
+                        </div>
+                      )}
+
+                      {!client.corporate_name && (
+                        <div className="flex items-start space-x-3">
+                          <Building className="h-4 w-4 text-gray-300 mt-1" />
+                          <div>
+                            <p className="text-sm font-medium text-gray-400">Razão Social</p>
+                            <p className="text-gray-400 italic">Não informado</p>
+                          </div>
+                        </div>
+                      )}
+
+                      {!client.cnpj && (
+                        <div className="flex items-start space-x-3">
+                          <Hash className="h-4 w-4 text-gray-300 mt-1" />
+                          <div>
+                            <p className="text-sm font-medium text-gray-400">CNPJ</p>
+                            <p className="text-gray-400 italic">Não informado</p>
+                          </div>
+                        </div>
+                      )}
+
+                      {!client.state_registration && (
+                        <div className="flex items-start space-x-3">
+                          <FileText className="h-4 w-4 text-gray-300 mt-1" />
+                          <div>
+                            <p className="text-sm font-medium text-gray-400">Inscrição Estadual</p>
+                            <p className="text-gray-400 italic">Não informado</p>
+                          </div>
+                        </div>
+                      )}
                     </>
                   ) : (
                     <>
                       <h4 className="font-medium text-gray-900 border-b pb-2">Informações Pessoais</h4>
 
-                      {client.full_name && client.name !== client.full_name && (
-                        <div className="flex items-start space-x-3">
-                          <UserCheck className="h-4 w-4 text-gray-400 mt-1" />
-                          <div>
-                            <p className="text-sm font-medium text-gray-500">Nome Completo</p>
-                            <p className="text-gray-900">{client.full_name}</p>
-                          </div>
+                      <div className="flex items-start space-x-3">
+                        <UserCheck className="h-4 w-4 text-gray-400 mt-1" />
+                        <div>
+                          <p className="text-sm font-medium text-gray-500">Nome Completo</p>
+                          {client.full_name ? (
+                            <>
+                              <p className="text-gray-900">{client.full_name}</p>
+                              {client.name !== client.full_name && (
+                                <p className="text-gray-600 text-sm">
+                                  Nome de apresentação: {client.name}
+                                </p>
+                              )}
+                            </>
+                          ) : (
+                            <p className="text-gray-900">{client.name}</p>
+                          )}
                         </div>
-                      )}
+                      </div>
 
                       {client.cpf && (
                         <div className="flex items-start space-x-3">
@@ -315,6 +388,28 @@ export function ClientDetails({ clientId, onBack, onEdit }: ClientDetailsProps) 
                           <div>
                             <p className="text-sm font-medium text-gray-500">RG</p>
                             <p className="text-gray-900">{client.rg}</p>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Show empty states for missing information */}
+
+                      {!client.cpf && (
+                        <div className="flex items-start space-x-3">
+                          <CreditCard className="h-4 w-4 text-gray-300 mt-1" />
+                          <div>
+                            <p className="text-sm font-medium text-gray-400">CPF</p>
+                            <p className="text-gray-400 italic">Não informado</p>
+                          </div>
+                        </div>
+                      )}
+
+                      {!client.rg && (
+                        <div className="flex items-start space-x-3">
+                          <FileText className="h-4 w-4 text-gray-300 mt-1" />
+                          <div>
+                            <p className="text-sm font-medium text-gray-400">RG</p>
+                            <p className="text-gray-400 italic">Não informado</p>
                           </div>
                         </div>
                       )}

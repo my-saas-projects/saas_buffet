@@ -60,8 +60,15 @@ export function ClientsList({ onClientSelect, onCreateNew, editingClient, onEdit
       try {
         await clientsAPI.delete(id)
         loadClients()
-      } catch (error) {
+      } catch (error: any) {
         console.error('Erro ao excluir cliente:', error)
+
+        // Check if the error is due to protected foreign key constraint
+        if (error.response?.status === 500 || error.response?.status === 400) {
+          alert('Não é possível excluir este cliente pois ele possui eventos associados. Remova ou transfira os eventos primeiro.')
+        } else {
+          alert('Erro ao excluir cliente. Tente novamente.')
+        }
       }
     }
   }
@@ -92,7 +99,7 @@ export function ClientsList({ onClientSelect, onCreateNew, editingClient, onEdit
   if (showForm || editingClient) {
     return (
       <ClientForm
-        clientId={editingClient?.id}
+        clientId={editingClient?.id?.toString()}
         initialData={editingClient ? {
           name: editingClient.name,
           email: editingClient.email,
