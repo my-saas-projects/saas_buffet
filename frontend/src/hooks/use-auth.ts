@@ -50,6 +50,7 @@ interface RegisterData {
   email: string
   phone: string
   companyName: string
+  password: string
   role?: string
 }
 
@@ -136,10 +137,44 @@ export function useAuth(): AuthState {
   }
 
   const register = async (data: RegisterData) => {
-    // Note: For now, remove register functionality as it needs to be implemented
-    // on the Django backend. User registration should be handled by admin or
-    // through a different flow.
-    return { success: false, error: 'Registro não implementado. Entre em contato com o administrador.' }
+    try {
+      const response = await authAPI.register({
+        username: data.email, // Usar email como username
+        email: data.email,
+        first_name: data.name.split(' ')[0] || data.name,
+        last_name: data.name.split(' ').slice(1).join(' ') || '',
+        phone: data.phone,
+        password: data.password,
+        password_confirm: data.password,
+        company_name: data.companyName
+      })
+      
+      const responseData = response.data
+
+      if (responseData.token) {
+        // Store token and user data
+        localStorage.setItem('token', responseData.token)
+        localStorage.setItem('user', JSON.stringify(responseData.user))
+
+        setUser(responseData.user)
+        if (responseData.user.company) {
+          setCompany(responseData.user.company)
+        }
+
+        // Redirect to onboarding after successful registration
+        setTimeout(() => {
+          window.location.href = '/onboarding'
+        }, 500)
+
+        return { success: true }
+      } else {
+        return { success: false, error: 'Token não recebido' }
+      }
+    } catch (error: any) {
+      console.error('Erro no registro:', error)
+      const errorMessage = error.response?.data?.error || error.response?.data?.detail || 'Erro ao conectar com o servidor'
+      return { success: false, error: errorMessage }
+    }
   }
 
   const logout = async () => {

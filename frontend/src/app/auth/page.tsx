@@ -21,6 +21,8 @@ export default function AuthPage() {
     email: "",
     phone: "",
     companyName: "",
+    password: "",
+    confirmPassword: "",
     role: "owner"
   })
   
@@ -59,9 +61,37 @@ export default function AuthPage() {
     e.preventDefault()
     setIsLoading(true)
     
+    // Validar senhas
+    if (registerForm.password !== registerForm.confirmPassword) {
+      toast({
+        title: "Erro no cadastro",
+        description: "As senhas não coincidem",
+        variant: "destructive",
+      })
+      setIsLoading(false)
+      return
+    }
+    
+    if (registerForm.password.length < 8) {
+      toast({
+        title: "Erro no cadastro",
+        description: "A senha deve ter pelo menos 8 caracteres",
+        variant: "destructive",
+      })
+      setIsLoading(false)
+      return
+    }
+    
     console.log('Tentando registrar:', registerForm)
     
-    const result = await register(registerForm)
+    const result = await register({
+      name: registerForm.name,
+      email: registerForm.email,
+      phone: registerForm.phone,
+      companyName: registerForm.companyName,
+      password: registerForm.password,
+      role: registerForm.role
+    })
     
     console.log('Resultado do registro:', result)
     
@@ -205,6 +235,30 @@ export default function AuthPage() {
                       value={registerForm.companyName}
                       onChange={(e) => setRegisterForm(prev => ({ ...prev, companyName: e.target.value }))}
                       required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="password">Senha</Label>
+                    <Input
+                      id="password"
+                      type="password"
+                      placeholder="••••••••"
+                      value={registerForm.password}
+                      onChange={(e) => setRegisterForm(prev => ({ ...prev, password: e.target.value }))}
+                      required
+                      minLength={8}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="confirm-password">Confirmar Senha</Label>
+                    <Input
+                      id="confirm-password"
+                      type="password"
+                      placeholder="••••••••"
+                      value={registerForm.confirmPassword}
+                      onChange={(e) => setRegisterForm(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                      required
+                      minLength={8}
                     />
                   </div>
                   <div className="space-y-2">
