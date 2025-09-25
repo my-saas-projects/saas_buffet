@@ -33,6 +33,7 @@ class Event(models.Model):
     client_name = models.CharField(max_length=200)
     client_email = models.EmailField()
     client_phone = models.CharField(max_length=20)
+    client = models.ForeignKey('clients.Client', on_delete=models.PROTECT, related_name='events', null=True, blank=True)
     
     # Event details
     event_date = models.DateField()

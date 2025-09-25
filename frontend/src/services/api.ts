@@ -132,4 +132,23 @@ export const financialsAPI = {
     api.get('/financials/quotes/'),
 };
 
+export const clientsAPI = {
+  list: (search?: string) => {
+    const params = search ? { search } : {};
+    return api.get('/clients/', { params });
+  },
+
+  create: (clientData: any) =>
+    api.post('/clients/', clientData),
+
+  get: (id: string) =>
+    api.get(`/clients/${id}/`),
+
+  update: (id: string, clientData: any) =>
+    api.put(`/clients/${id}/`, clientData),
+
+  delete: (id: string) =>
+    api.delete(`/clients/${id}/`),
+};
+
 export default api;

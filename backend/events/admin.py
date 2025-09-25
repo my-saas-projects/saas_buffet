@@ -3,19 +3,19 @@ from .models import Event, MenuItem, EventMenu
 
 @admin.register(Event)
 class EventAdmin(admin.ModelAdmin):
-    list_display = ('title', 'event_type', 'event_date', 'start_time', 'client_name', 
+    list_display = ('title', 'event_type', 'event_date', 'start_time', 'client',
                     'guest_count', 'status', 'company', 'created_at')
     list_filter = ('event_type', 'status', 'company', 'event_date', 'created_at')
-    search_fields = ('title', 'client_name', 'client_email', 'description')
+    search_fields = ('title', 'client__name', 'client__email', 'description')
     readonly_fields = ('created_at', 'updated_at')
     date_hierarchy = 'event_date'
-    
+
     fieldsets = (
         ('Basic Information', {
             'fields': ('title', 'event_type', 'description', 'company', 'created_by')
         }),
         ('Client Information', {
-            'fields': ('client_name', 'client_email', 'client_phone')
+            'fields': ('client',)
         }),
         ('Event Details', {
             'fields': ('event_date', 'start_time', 'end_time', 'guest_count', 'venue_location')

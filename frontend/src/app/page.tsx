@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useAuth } from "@/hooks/use-auth"
 import { EventsList } from "@/components/events/events-list"
 import { EventForm } from "@/components/events/event-form"
+import { ClientsList } from "@/components/clients/clients-list"
 import { EVENT_STATUS_COLORS, EVENT_STATUS_LABELS, EVENT_STATUS_OPTIONS } from "@/lib/constants"
 
 export default function Dashboard() {
@@ -236,11 +237,12 @@ export default function Dashboard() {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="overview">Visão Geral</TabsTrigger>
-            <TabsTrigger value="events">Eventos</TabsTrigger>
-            <TabsTrigger value="financial">Financeiro</TabsTrigger>
+            <TabsTrigger value="clients">Clientes</TabsTrigger>
+            <TabsTrigger value="events">Eventos</TabsTrigger>   
             <TabsTrigger value="calendar">Agenda</TabsTrigger>
+            <TabsTrigger value="financial">Financeiro</TabsTrigger>
           </TabsList>
 
           {/* Visão Geral */}
@@ -595,6 +597,16 @@ export default function Dashboard() {
                 />
               )
             )}
+          </TabsContent>
+
+          {/* Clientes */}
+          <TabsContent value="clients" className="space-y-6">
+            <ClientsList
+              onClientSelect={(client) => {
+                // Navegação para detalhes do cliente
+                window.location.href = `/clients/${client.id}`
+              }}
+            />
           </TabsContent>
 
           {/* Financeiro */}

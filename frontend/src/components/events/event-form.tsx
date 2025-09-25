@@ -1,15 +1,15 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { CalendarDays, Clock, Users, MapPin, User, X } from "lucide-react"
+import { CalendarDays, Clock, Users, MapPin, User, X, Plus } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
-import { eventsAPI } from "@/services/api"
+import { eventsAPI, clientsAPI } from "@/services/api"
 import { EVENT_STATUS, EVENT_STATUS_OPTIONS, EventStatus } from "@/lib/constants"
 
 interface EventFormData {
@@ -18,15 +18,20 @@ interface EventFormData {
   date: string
   startTime: string
   endTime: string
-  clientName: string
-  clientPhone: string
-  clientEmail: string
+  clientId: string
   guestCount: string
   venue: string
   value: string
   notes: string
   status: EventStatus
   proposalValidityDate: string
+}
+
+interface Client {
+  id: string
+  name: string
+  email: string
+  phone: string
 }
 
 interface EventFormProps {
@@ -39,15 +44,15 @@ interface EventFormProps {
 
 export function EventForm({ companyId, eventId, onSuccess, onCancel, initialData }: EventFormProps) {
   const [isLoading, setIsLoading] = useState(false)
+  const [clients, setClients] = useState<Client[]>([])
+  const [loadingClients, setLoadingClients] = useState(true)
   const [formData, setFormData] = useState<EventFormData>({
     eventType: initialData?.eventType || "",
     title: initialData?.title || "",
     date: initialData?.date || "",
     startTime: initialData?.startTime || "",
     endTime: initialData?.endTime || "",
-    clientName: initialData?.clientName || "",
-    clientPhone: initialData?.clientPhone || "",
-    clientEmail: initialData?.clientEmail || "",
+    clientId: initialData?.clientId || "",
     guestCount: initialData?.guestCount || "",
     venue: initialData?.venue || "",
     value: initialData?.value || "",
@@ -57,6 +62,26 @@ export function EventForm({ companyId, eventId, onSuccess, onCancel, initialData
   })
 
   const { toast } = useToast()
+
+  useEffect(() => {
+    loadClients()
+  }, [])
+
+  const loadClients = async () => {
+    try {
+      const response = await clientsAPI.list()
+      setClients(response.data.results || response.data || [])
+    } catch (error) {
+      console.error('Erro ao carregar clientes:', error)
+      toast({
+        title: "Erro ao carregar clientes",
+        description: "Não foi possível carregar a lista de clientes.",
+        variant: "destructive",
+      })
+    } finally {
+      setLoadingClients(false)
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -69,9 +94,7 @@ export function EventForm({ companyId, eventId, onSuccess, onCancel, initialData
         event_date: formData.date,
         start_time: formData.startTime,
         end_time: formData.endTime,
-        client_name: formData.clientName,
-        client_phone: formData.clientPhone,
-        client_email: formData.clientEmail,
+        client: parseInt(formData.clientId),
         guest_count: parseInt(formData.guestCount),
         venue_location: formData.venue,
         value: formData.value ? parseFloat(formData.value) : null,
@@ -223,39 +246,53 @@ export function EventForm({ companyId, eventId, onSuccess, onCancel, initialData
               <User className="h-4 w-4" />
               <span>Informações do Cliente</span>
             </h3>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="clientName">Nome do Cliente *</Label>
-                <Input
-                  id="clientName"
-                  value={formData.clientName}
-                  onChange={(e) => updateField("clientName", e.target.value)}
-                  placeholder="João Silva"
-                  required
-                />
-              </div>
 
+            <div className="grid grid-cols-1 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="clientPhone">Telefone do Cliente *</Label>
-                <Input
-                  id="clientPhone"
-                  value={formData.clientPhone}
-                  onChange={(e) => updateField("clientPhone", e.target.value)}
-                  placeholder="(11) 99999-9999"
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="clientEmail">Email do Cliente</Label>
-                <Input
-                  id="clientEmail"
-                  type="email"
-                  value={formData.clientEmail}
-                  onChange={(e) => updateField("clientEmail", e.target.value)}
-                  placeholder="cliente@email.com"
-                />
+                <Label htmlFor="clientId">Cliente *</Label>
+                <div className="flex space-x-2">
+                  <Select
+                    value={formData.clientId}
+                    onValueChange={(value) => updateField("clientId", value)}
+                    required
+                    disabled={loadingClients}
+                  >
+                    <SelectTrigger className="flex-1">
+                      <SelectValue placeholder={loadingClients ? "Carregando clientes..." : "Selecione um cliente"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {clients.map(client => (
+                        <SelectItem key={client.id} value={client.id}>
+                          <div className="flex flex-col">
+                            <span>{client.name}</span>
+                            <span className="text-xs text-gray-500">{client.email} • {client.phone}</span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => window.open('/clients/new', '_blank')}
+                    className="px-3"
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
+                {clients.length === 0 && !loadingClients && (
+                  <p className="text-sm text-amber-600">
+                    Nenhum cliente cadastrado.
+                    <Button
+                      type="button"
+                      variant="link"
+                      className="p-0 h-auto text-sm"
+                      onClick={() => window.open('/clients/new', '_blank')}
+                    >
+                      Cadastre o primeiro cliente
+                    </Button>
+                  </p>
+                )}
               </div>
 
               <div className="space-y-2">

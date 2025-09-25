@@ -57,6 +57,7 @@ INSTALLED_APPS = [
     'events',
     'financials',
     'companies',
+    'clients',
 ]
 
 MIDDLEWARE = [

@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from .models import Event, MenuItem, EventMenu
+from clients.serializers import ClientSerializer
 
 class MenuItemSerializer(serializers.ModelSerializer):
     class Meta:
@@ -21,7 +22,8 @@ class EventSerializer(serializers.ModelSerializer):
     menu_items = EventMenuSerializer(many=True, read_only=True)
     is_conflicting = serializers.BooleanField(read_only=True)
     created_by_name = serializers.CharField(source='created_by.get_full_name', read_only=True)
-    
+    client_data = ClientSerializer(source='client', read_only=True)
+
     class Meta:
         model = Event
         fields = '__all__'
@@ -36,10 +38,13 @@ class EventListSerializer(serializers.ModelSerializer):
     event_type_display = serializers.CharField(source='get_event_type_display', read_only=True)
     status_display = serializers.CharField(source='get_status_display', read_only=True)
     is_conflicting = serializers.BooleanField(read_only=True)
-    
+    client_name = serializers.CharField(source='client.name', read_only=True)
+    client_email = serializers.CharField(source='client.email', read_only=True)
+    client_phone = serializers.CharField(source='client.phone', read_only=True)
+
     class Meta:
         model = Event
         fields = ('id', 'title', 'event_type', 'event_type_display', 'status', 'status_display',
-                 'event_date', 'start_time', 'end_time', 'guest_count', 'client_name',
+                 'event_date', 'start_time', 'end_time', 'guest_count', 'client', 'client_name',
                  'client_email', 'client_phone', 'estimated_cost', 'final_price', 'value',
                  'is_conflicting', 'proposal_validity_date')
