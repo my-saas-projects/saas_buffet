@@ -1,0 +1,43 @@
+services:
+  web:
+    build: ./backend
+    command: gunicorn buffetflow.wsgi:application --bind 0.0.0.0:8000
+    volumes:
+      - static_volume:/app/staticfiles
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+      - redis
+    environment:
+      - DEBUG=False
+      - DATABASE_URL=postgresql://buffetflow_user:${POSTGRES_PASSWORD}@db:5432/buffetflow_db
+      - REDIS_URL=redis://redis:6379/0
+      - SECRET_KEY=${SECRET_KEY}
+
+  db:
+    image: postgres:15
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    environment:
+      POSTGRES_DB: buffetflow_db
+      POSTGRES_USER: buffetflow_user
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+
+  redis:
+    image: redis:7-alpine
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - static_volume:/var/www/html/static
+      - ./nginx.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - web
+
+volumes:
+  postgres_data:
+  static_volume:

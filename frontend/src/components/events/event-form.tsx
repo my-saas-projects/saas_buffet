@@ -22,17 +22,19 @@ interface EventFormData {
   clientEmail: string
   guestCount: string
   venue: string
+  value: string
   notes: string
 }
 
 interface EventFormProps {
   companyId: string
+  eventId?: string
   onSuccess?: () => void
   onCancel?: () => void
   initialData?: Partial<EventFormData>
 }
 
-export function EventForm({ companyId, onSuccess, onCancel, initialData }: EventFormProps) {
+export function EventForm({ companyId, eventId, onSuccess, onCancel, initialData }: EventFormProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [formData, setFormData] = useState<EventFormData>({
     eventType: initialData?.eventType || "",
@@ -45,6 +47,7 @@ export function EventForm({ companyId, onSuccess, onCancel, initialData }: Event
     clientEmail: initialData?.clientEmail || "",
     guestCount: initialData?.guestCount || "",
     venue: initialData?.venue || "",
+    value: initialData?.value || "",
     notes: initialData?.notes || ""
   })
 
@@ -66,21 +69,26 @@ export function EventForm({ companyId, onSuccess, onCancel, initialData }: Event
         client_email: formData.clientEmail,
         guest_count: parseInt(formData.guestCount),
         venue_location: formData.venue,
+        value: formData.value ? parseFloat(formData.value) : null,
         notes: formData.notes
       }
 
-      const response = await eventsAPI.create(eventData)
+      const response = eventId
+        ? await eventsAPI.update(eventId, eventData)
+        : await eventsAPI.create(eventData)
 
       toast({
-        title: "Evento criado com sucesso!",
-        description: `${formData.title} foi adicionado à sua agenda.`,
+        title: eventId ? "Evento atualizado com sucesso!" : "Evento criado com sucesso!",
+        description: eventId
+          ? `${formData.title} foi atualizado.`
+          : `${formData.title} foi adicionado à sua agenda.`,
       })
       onSuccess?.()
     } catch (error: any) {
       console.error('Erro ao criar evento:', error)
-      const errorMessage = error.response?.data?.detail || error.response?.data?.error || "Não foi possível criar o evento"
+      const errorMessage = error.response?.data?.detail || error.response?.data?.error || (eventId ? "Não foi possível atualizar o evento" : "Não foi possível criar o evento")
       toast({
-        title: "Erro ao criar evento",
+        title: eventId ? "Erro ao atualizar evento" : "Erro ao criar evento",
         description: errorMessage,
         variant: "destructive",
       })
@@ -108,10 +116,10 @@ export function EventForm({ companyId, onSuccess, onCancel, initialData }: Event
           <div>
             <CardTitle className="flex items-center space-x-2">
               <CalendarDays className="h-5 w-5" />
-              <span>Novo Evento</span>
+              <span>{eventId ? 'Editar Evento' : 'Novo Evento'}</span>
             </CardTitle>
             <CardDescription>
-              Preencha as informações para cadastrar um novo evento
+              {eventId ? 'Atualize as informações do evento' : 'Preencha as informações para cadastrar um novo evento'}
             </CardDescription>
           </div>
           {onCancel && (
@@ -264,15 +272,30 @@ export function EventForm({ companyId, onSuccess, onCancel, initialData }: Event
               <MapPin className="h-4 w-4" />
               <span>Local do Evento</span>
             </h3>
-            
-            <div className="space-y-2">
-              <Label htmlFor="venue">Local (Endereço ou Nome do Espaço)</Label>
-              <Input
-                id="venue"
-                value={formData.venue}
-                onChange={(e) => updateField("venue", e.target.value)}
-                placeholder="Salão de Festas Bela Vista - Rua das Flores, 123"
-              />
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="venue">Local (Endereço ou Nome do Espaço)</Label>
+                <Input
+                  id="venue"
+                  value={formData.venue}
+                  onChange={(e) => updateField("venue", e.target.value)}
+                  placeholder="Salão de Festas Bela Vista - Rua das Flores, 123"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="value">Valor do Evento</Label>
+                <Input
+                  id="value"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={formData.value}
+                  onChange={(e) => updateField("value", e.target.value)}
+                  placeholder="1500.00"
+                />
+              </div>
             </div>
           </div>
 
@@ -300,7 +323,7 @@ export function EventForm({ companyId, onSuccess, onCancel, initialData }: Event
               </Button>
             )}
             <Button type="submit" disabled={isLoading}>
-              {isLoading ? "Salvando..." : "Criar Evento"}
+              {isLoading ? "Salvando..." : (eventId ? "Atualizar Evento" : "Criar Evento")}
             </Button>
           </div>
         </form>

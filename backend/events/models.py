@@ -37,12 +37,13 @@ class Event(models.Model):
     start_time = models.TimeField()
     end_time = models.TimeField()
     guest_count = models.IntegerField()
-    venue_location = models.CharField(max_length=300)
+    venue_location = models.CharField(max_length=300, null=True, blank=True)
     
     # Status and pricing
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='draft')
     estimated_cost = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     final_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    value = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     
     # Additional information
     special_requirements = models.TextField(blank=True, null=True)

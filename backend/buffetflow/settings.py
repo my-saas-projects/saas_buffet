@@ -12,11 +12,20 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 import os
-from decouple import config
+from decouple import config as decouple_config
+from decouple import Config, RepositoryEnv
 import dj_database_url
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Permitir que o projeto leia o .env na raiz do repo quando o manage.py
+# for executado a partir do diretório backend/
+_root_env_path = BASE_DIR.parent / '.env'
+if _root_env_path.exists():
+    config = Config(RepositoryEnv(_root_env_path))
+else:
+    config = decouple_config
 
 
 # Quick-start development settings - unsuitable for production

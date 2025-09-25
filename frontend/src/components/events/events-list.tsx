@@ -34,6 +34,7 @@ interface Event {
   client_email?: string
   guest_count: number
   venue_location?: string
+  value?: number
   status: string
   notes?: string
   created_at: string
@@ -54,6 +55,7 @@ export function EventsList({ companyId, onEventSelect, onCreateNew }: EventsList
   const [events, setEvents] = useState<Event[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
+  const [editingEvent, setEditingEvent] = useState<Event | null>(null)
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState<string>("all")
 
@@ -133,15 +135,34 @@ export function EventsList({ companyId, onEventSelect, onCreateNew }: EventsList
     return `${hours}:${minutes}`
   }
 
-  if (showForm) {
+  if (showForm || editingEvent) {
     return (
       <EventForm
         companyId={companyId}
+        eventId={editingEvent?.id}
+        initialData={editingEvent ? {
+          eventType: editingEvent.event_type,
+          title: editingEvent.title,
+          date: editingEvent.event_date,
+          startTime: editingEvent.start_time,
+          endTime: editingEvent.end_time,
+          clientName: editingEvent.client_name,
+          clientPhone: editingEvent.client_phone,
+          clientEmail: editingEvent.client_email || '',
+          guestCount: editingEvent.guest_count.toString(),
+          venue: editingEvent.venue_location || '',
+          value: editingEvent.value?.toString() || '',
+          notes: editingEvent.notes || ''
+        } : undefined}
         onSuccess={() => {
           setShowForm(false)
+          setEditingEvent(null)
           loadEvents()
         }}
-        onCancel={() => setShowForm(false)}
+        onCancel={() => {
+          setShowForm(false)
+          setEditingEvent(null)
+        }}
       />
     )
   }
@@ -284,6 +305,7 @@ export function EventsList({ companyId, onEventSelect, onCreateNew }: EventsList
                     <Button
                       variant="outline"
                       size="sm"
+                      onClick={() => setEditingEvent(event)}
                     >
                       <Edit className="h-4 w-4" />
                     </Button>

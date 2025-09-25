@@ -4,13 +4,17 @@ import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { CalendarDays, DollarSign, Users, AlertTriangle, Plus, Settings } from "lucide-react"
+import { CalendarDays, DollarSign, Users, AlertTriangle, Plus, Settings, ArrowLeft, Clock, MapPin, User } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useAuth } from "@/hooks/use-auth"
+import { EventsList } from "@/components/events/events-list"
+import { EventForm } from "@/components/events/event-form"
 
 export default function Dashboard() {
   const { user, company, isLoading: authLoading, logout } = useAuth()
   const [activeTab, setActiveTab] = useState("overview")
+  const [selectedEvent, setSelectedEvent] = useState(null)
+  const [editingEvent, setEditingEvent] = useState(false)
 
   useEffect(() => {
     // Se usuário autenticado ainda não possui empresa, redireciona para onboarding
@@ -151,9 +155,39 @@ export default function Dashboard() {
     switch (status) {
       case "confirmed": return "Confirmado"
       case "preparing": return "Em Preparação"
+      case "ongoing": return "Em Andamento"
+      case "completed": return "Concluído"
+      case "cancelled": return "Cancelado"
       case "quote": return "Orçamento"
       default: return status
     }
+  }
+
+  const getEventTypeText = (eventType: string) => {
+    switch (eventType) {
+      case "wedding": return "Casamento"
+      case "graduation": return "Formatura"
+      case "birthday": return "Aniversário"
+      case "corporate": return "Corporativo"
+      case "baptism": return "Batizado"
+      case "other": return "Outro"
+      default: return eventType
+    }
+  }
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString)
+    return date.toLocaleDateString('pt-BR', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    })
+  }
+
+  const formatTime = (timeString: string) => {
+    const [hours, minutes] = timeString.split(':')
+    return `${hours}:${minutes}`
   }
 
   return (
@@ -320,34 +354,172 @@ export default function Dashboard() {
 
           {/* Eventos */}
           <TabsContent value="events" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <div className="flex justify-between items-center">
-                  <div>
-                    <CardTitle>Gerenciamento de Eventos</CardTitle>
-                    <CardDescription>Cadastre e gerencie todos os seus eventos</CardDescription>
+            {company && (
+              selectedEvent ? (
+                editingEvent ? (
+                  // Event Form (Edit Mode)
+                  <EventForm
+                    companyId={company.id}
+                    eventId={selectedEvent.id}
+                    initialData={{
+                      eventType: selectedEvent.event_type,
+                      title: selectedEvent.title,
+                      date: selectedEvent.event_date,
+                      startTime: selectedEvent.start_time,
+                      endTime: selectedEvent.end_time,
+                      clientName: selectedEvent.client_name,
+                      clientPhone: selectedEvent.client_phone,
+                      clientEmail: selectedEvent.client_email || '',
+                      guestCount: selectedEvent.guest_count.toString(),
+                      venue: selectedEvent.venue_location || '',
+                      value: selectedEvent.value?.toString() || '',
+                      notes: selectedEvent.notes || ''
+                    }}
+                    onSuccess={() => {
+                      setEditingEvent(false)
+                      setSelectedEvent(null)
+                    }}
+                    onCancel={() => {
+                      setEditingEvent(false)
+                    }}
+                  />
+                ) : (
+                  // Event Details View
+                  <div className="space-y-6">
+                  <div className="flex items-center">
+                    <Button variant="ghost" onClick={() => { setSelectedEvent(null); setEditingEvent(false); }} className="mr-4">
+                      <ArrowLeft className="h-4 w-4" />
+                    </Button>
+                    <h2 className="text-2xl font-bold text-gray-900">Detalhes do Evento</h2>
                   </div>
-                  <Button onClick={() => window.location.href = "/events"}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Gerenciar Eventos
-                  </Button>
+
+                  {/* Cabeçalho */}
+                  <Card>
+                    <CardHeader>
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <div className="flex items-center space-x-3 mb-2">
+                            <CardTitle className="text-2xl">{selectedEvent.title}</CardTitle>
+                            <Badge className={getStatusColor(selectedEvent.status)}>
+                              {getStatusText(selectedEvent.status)}
+                            </Badge>
+                            <Badge variant="outline">
+                              {getEventTypeText(selectedEvent.event_type)}
+                            </Badge>
+                          </div>
+                          <CardDescription>
+                            Evento cadastrado em {new Date(selectedEvent.created_at).toLocaleDateString('pt-BR')}
+                          </CardDescription>
+                        </div>
+                      </div>
+                    </CardHeader>
+                  </Card>
+
+                  {/* Informações Principais */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center space-x-2">
+                          <CalendarDays className="h-5 w-5" />
+                          <span>Data e Horário</span>
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-3">
+                        <div className="flex items-center space-x-2">
+                          <CalendarDays className="h-4 w-4 text-gray-500" />
+                          <span className="font-medium">{formatDate(selectedEvent.event_date)}</span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Clock className="h-4 w-4 text-gray-500" />
+                          <span>
+                            {formatTime(selectedEvent.start_time)} - {formatTime(selectedEvent.end_time)}
+                          </span>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center space-x-2">
+                          <Users className="h-5 w-5" />
+                          <span>Informações do Evento</span>
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-3">
+                        <div className="flex items-center space-x-2">
+                          <Users className="h-4 w-4 text-gray-500" />
+                          <span>{selectedEvent.guest_count} convidados</span>
+                        </div>
+                        {selectedEvent.venue_location && (
+                          <div className="flex items-center space-x-2">
+                            <MapPin className="h-4 w-4 text-gray-500" />
+                            <span>{selectedEvent.venue_location}</span>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  {/* Informações do Cliente */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center space-x-2">
+                        <User className="h-5 w-5" />
+                        <span>Informações do Cliente</span>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <p className="text-sm font-medium text-gray-500">Nome</p>
+                          <p className="text-lg">{selectedEvent.client_name}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-gray-500">Telefone</p>
+                          <p className="text-lg">{selectedEvent.client_phone}</p>
+                        </div>
+                        {selectedEvent.client_email && (
+                          <div>
+                            <p className="text-sm font-medium text-gray-500">Email</p>
+                            <p className="text-lg">{selectedEvent.client_email}</p>
+                          </div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Observações */}
+                  {selectedEvent.notes && (
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Observações</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="text-gray-700 whitespace-pre-wrap">{selectedEvent.notes}</p>
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  {/* Ações */}
+                  <Card>
+                    <CardContent className="pt-6">
+                      <div className="flex space-x-3">
+                        <Button variant="outline" onClick={() => setEditingEvent(true)}>Editar Evento</Button>
+                        <Button variant="outline">Gerar Orçamento</Button>
+                        <Button variant="destructive">Excluir Evento</Button>
+                      </div>
+                    </CardContent>
+                  </Card>
                 </div>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-12">
-                  <CalendarDays className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">
-                    Sistema de Eventos Disponível
-                  </h3>
-                  <p className="text-gray-600 mb-4">
-                    Acesse a página completa de gerenciamento de eventos.
-                  </p>
-                  <Button onClick={() => window.location.href = "/events"}>
-                    Acessar Gerenciamento de Eventos
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+                )
+              ) : (
+                // Events List View
+                <EventsList
+                  companyId={company.id}
+                  onEventSelect={setSelectedEvent}
+                />
+              )
+            )}
           </TabsContent>
 
           {/* Financeiro */}
