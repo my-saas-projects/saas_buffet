@@ -57,7 +57,18 @@ export function EventsList({ companyId, onEventSelect, onCreateNew }: EventsList
   }
 
   const getStatusColor = (status: EventStatus) => {
-    return EVENT_STATUS_COLORS[status] || "bg-gray-100 text-gray-800"
+    // Mapeamento direto para cores com estilos mais específicos
+    const colorMap: Record<string, string> = {
+      'proposta_pendente': 'bg-yellow-500 text-white border-yellow-500',
+      'proposta_enviada': 'bg-blue-500 text-white border-blue-500',
+      'proposta_recusada': 'bg-red-500 text-white border-red-500',
+      'proposta_aceita': 'bg-green-500 text-white border-green-500',
+      'em_execucao': 'bg-purple-500 text-white border-purple-500',
+      'pos_evento': 'bg-indigo-500 text-white border-indigo-500',
+      'concluido': 'bg-gray-500 text-white border-gray-500',
+    }
+    
+    return colorMap[status] || "bg-gray-100 text-gray-800"
   }
 
   const getStatusText = (status: EventStatus) => {
@@ -232,9 +243,9 @@ export function EventsList({ companyId, onEventSelect, onCreateNew }: EventsList
                   <div className="flex-1">
                     <div className="flex items-center space-x-3 mb-2">
                       <h3 className="text-lg font-medium text-gray-900">{event.title}</h3>
-                      <Badge variant="outline" className={getStatusColor(event.status)}>
+                      <span className={`inline-flex items-center justify-center rounded-md border px-2 py-0.5 text-xs font-medium ${getStatusColor(event.status)}`}>
                         {getStatusText(event.status)}
-                      </Badge>
+                      </span>
                       <Badge variant="outline">
                         {getEventTypeText(event.event_type)}
                       </Badge>
