@@ -9,6 +9,7 @@ from .serializers import (
     EventSerializer,
     EventCreateSerializer,
     EventListSerializer,
+    EventAgendaSerializer,
     MenuItemSerializer,
     EventMenuSerializer
 )
@@ -109,24 +110,38 @@ def event_detail_view(request, event_id):
 def calendar_view(request):
     if not request.user.company:
         return Response({'error': 'No company associated'}, status=status.HTTP_400_BAD_REQUEST)
-    
-    # Get month and year from query params, default to current month
-    year = int(request.GET.get('year', datetime.now().year))
-    month = int(request.GET.get('month', datetime.now().month))
-    
-    # Get events for the specified month
-    events = Event.objects.filter(
-        company=request.user.company,
-        event_date__year=year,
-        event_date__month=month
-    ).order_by('event_date', 'start_time')
-    
-    serializer = EventListSerializer(events, many=True)
-    return Response({
-        'year': year,
-        'month': month,
-        'events': serializer.data
-    })
+
+    events = Event.objects.filter(company=request.user.company)
+
+    # Support both date range and month/year filtering
+    start_date = request.GET.get('start_date')
+    end_date = request.GET.get('end_date')
+
+    if start_date and end_date:
+        # Date range filtering for agenda view
+        events = events.filter(event_date__gte=start_date, event_date__lte=end_date)
+    else:
+        # Legacy month/year filtering
+        year = int(request.GET.get('year', datetime.now().year))
+        month = int(request.GET.get('month', datetime.now().month))
+        events = events.filter(event_date__year=year, event_date__month=month)
+
+    events = events.order_by('event_date', 'start_time')
+
+    # Use optimized serializer for agenda view
+    serializer = EventAgendaSerializer(events, many=True)
+
+    # Return different response formats based on filtering method
+    if start_date and end_date:
+        return Response({'events': serializer.data})
+    else:
+        year = int(request.GET.get('year', datetime.now().year))
+        month = int(request.GET.get('month', datetime.now().month))
+        return Response({
+            'year': year,
+            'month': month,
+            'events': serializer.data
+        })
 
 @api_view(['GET', 'POST'])
 @permission_classes([permissions.IsAuthenticated])

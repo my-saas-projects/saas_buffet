@@ -7,6 +7,7 @@ urlpatterns = [
     path('', views.events_view, name='events'),
     path('<int:event_id>/', views.event_detail_view, name='event_detail'),
     path('calendar/', views.calendar_view, name='calendar'),
+    path('agenda/', views.calendar_view, name='agenda'),  # Alias for agenda view
 
     path('menu-items/', views.menu_items_view, name='menu_items'),
     path('menu-items/<int:item_id>/', views.menu_item_detail_view, name='menu_item_detail'),

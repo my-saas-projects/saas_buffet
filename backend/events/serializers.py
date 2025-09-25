@@ -48,3 +48,13 @@ class EventListSerializer(serializers.ModelSerializer):
                  'event_date', 'start_time', 'end_time', 'guest_count', 'client', 'client_name',
                  'client_email', 'client_phone', 'estimated_cost', 'final_price', 'value',
                  'is_conflicting', 'proposal_validity_date')
+
+class EventAgendaSerializer(serializers.ModelSerializer):
+    """Optimized serializer for calendar/agenda view with minimal data"""
+    status_display = serializers.CharField(source='get_status_display', read_only=True)
+    event_type_display = serializers.CharField(source='get_event_type_display', read_only=True)
+
+    class Meta:
+        model = Event
+        fields = ('id', 'title', 'event_date', 'start_time', 'end_time', 'status',
+                 'status_display', 'event_type', 'event_type_display', 'client_name')

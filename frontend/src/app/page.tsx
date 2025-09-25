@@ -12,6 +12,7 @@ import { EventForm } from "@/components/events/event-form"
 import { ClientsList } from "@/components/clients/clients-list"
 import { ClientDetails } from "@/components/clients/client-details"
 import { ClientForm } from "@/components/clients/client-form"
+import { EventCalendar } from "@/components/calendar/event-calendar"
 import { EVENT_STATUS_COLORS, EVENT_STATUS_LABELS } from "@/lib/constants"
 import { dashboardAPI } from "@/services/api"
 import { EventStatusPieChart } from "@/components/charts/EventStatusPieChart"
@@ -189,7 +190,7 @@ function OverviewTab() {
                       <p className="text-sm text-gray-600">{event.clientName}</p>
                       <div className="flex items-center space-x-2 mt-1">
                         <span className="text-sm text-gray-500">
-                          {new Date(event.date).toLocaleDateString('pt-BR', { timeZone: 'UTC' })} às {event.time}
+                          {new Date(event.date).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}{event.time ? ` às ${event.time}` : ''}
                         </span>
                         <span className="text-sm text-gray-500">
                           • {event.guestCount} convidados
@@ -274,7 +275,8 @@ export default function Dashboard() {
     })
   }
 
-  const formatTime = (timeString: string) => {
+  const formatTime = (timeString: string | undefined | null) => {
+    if (!timeString) return '--:--'
     const [hours, minutes] = timeString.split(':')
     return `${hours}:${minutes}`
   }
@@ -690,20 +692,31 @@ export default function Dashboard() {
           </TabsContent>
 
           <TabsContent value="calendar" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Agenda Visual</CardTitle>
-                <CardDescription>Em breve</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-12">
-                  <CalendarDays className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">
-                    Calendário Interativo em Desenvolvimento
-                  </h3>
-                </div>
-              </CardContent>
-            </Card>
+            <div>
+              <div className="mb-6">
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                  Agenda de Eventos
+                </h2>
+                <p className="text-gray-600">
+                  Visualize seus eventos em um calendário interativo
+                </p>
+              </div>
+
+              <EventCalendar
+                onEventClick={(clickInfo) => {
+                  // Navigate to event details
+                  setActiveTab("events");
+                  // Find the event by ID and set it as selected
+                  const eventId = clickInfo.event.id;
+                  // This is a simplified approach - in a real app you'd fetch the full event data
+                  setSelectedEvent({ id: eventId });
+                }}
+                onDateSelect={(selectInfo) => {
+                  // Future enhancement: Allow creating new events from date selection
+                  console.log('Date selected for new event:', selectInfo);
+                }}
+              />
+            </div>
           </TabsContent>
         </Tabs>
       </main>

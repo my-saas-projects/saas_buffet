@@ -74,6 +74,14 @@ export const eventsAPI = {
 
   delete: (id: string) =>
     api.delete(`/events/${id}/`),
+
+  agenda: (startDate: string, endDate: string) =>
+    api.get('/events/agenda/', {
+      params: {
+        start_date: startDate,
+        end_date: endDate,
+      },
+    }),
 };
 
 export const companiesAPI = {
