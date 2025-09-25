@@ -15,6 +15,7 @@ urlpatterns = [
     path('api/financials/', include('financials.urls')),
     path('api/companies/', include('companies.urls')),
     path('api/clients/', include('clients.urls')),
+    path('api/dashboard/', include('dashboard.urls')),
     # Frontend compatibility endpoints
     path('api/quotes/', financial_views.quotes_view, name='quotes_proxy'),
     path('api/financial-summary/', financial_views.financial_summary_view, name='financial_summary'),

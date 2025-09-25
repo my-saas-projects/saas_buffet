@@ -151,4 +151,18 @@ export const clientsAPI = {
     api.delete(`/clients/${id}/`),
 };
 
+export const dashboardAPI = {
+  getStats: () => 
+    api.get('/dashboard/stats/'),
+  
+  getUpcomingEvents: () => 
+    api.get('/dashboard/upcoming_events/'),
+
+  getEventStatusDistribution: () => 
+    api.get('/dashboard/event_status_distribution/'),
+
+  getMonthlyRevenueChart: () => 
+    api.get('/dashboard/monthly_revenue_chart/'),
+};
+
 export default api;

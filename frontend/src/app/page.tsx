@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { CalendarDays, DollarSign, Users, AlertTriangle, Plus, Settings, ArrowLeft, Clock, MapPin, User } from "lucide-react"
+import { CalendarDays, DollarSign, Users, AlertTriangle, Plus, Settings, ArrowLeft, Clock, MapPin, User, BarChart2, PieChart } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useAuth } from "@/hooks/use-auth"
 import { EventsList } from "@/components/events/events-list"
@@ -12,7 +12,223 @@ import { EventForm } from "@/components/events/event-form"
 import { ClientsList } from "@/components/clients/clients-list"
 import { ClientDetails } from "@/components/clients/client-details"
 import { ClientForm } from "@/components/clients/client-form"
-import { EVENT_STATUS_COLORS, EVENT_STATUS_LABELS, EVENT_STATUS_OPTIONS } from "@/lib/constants"
+import { EVENT_STATUS_COLORS, EVENT_STATUS_LABELS } from "@/lib/constants"
+import { dashboardAPI } from "@/services/api"
+import { EventStatusPieChart } from "@/components/charts/EventStatusPieChart"
+import { MonthlyRevenueBarChart } from "@/components/charts/MonthlyRevenueBarChart"
+
+// Helper function to format currency
+const formatCurrency = (value: number | undefined) => {
+  if (value === undefined || value === null) return 'Não informado'
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL'
+  }).format(value)
+}
+
+function OverviewTab() {
+  const [stats, setStats] = useState<any>(null)
+  const [upcomingEvents, setUpcomingEvents] = useState<any[]>([])
+  const [statusDistribution, setStatusDistribution] = useState<any[]>([])
+  const [monthlyRevenue, setMonthlyRevenue] = useState<any[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      setIsLoading(true)
+      setError(null)
+      try {
+        const [
+          statsRes,
+          upcomingEventsRes,
+          statusDistributionRes,
+          monthlyRevenueRes
+        ] = await Promise.all([
+          dashboardAPI.getStats(),
+          dashboardAPI.getUpcomingEvents(),
+          dashboardAPI.getEventStatusDistribution(),
+          dashboardAPI.getMonthlyRevenueChart(),
+        ])
+
+        setStats(statsRes.data)
+        setUpcomingEvents(upcomingEventsRes.data)
+        setStatusDistribution(statusDistributionRes.data)
+        setMonthlyRevenue(monthlyRevenueRes.data)
+
+      } catch (err) {
+        setError("Falha ao carregar os dados do dashboard. Tente novamente mais tarde.")
+        console.error(err)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchDashboardData()
+  }, [])
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600"></div>
+        <p className="ml-4 text-gray-600">Carregando dados...</p>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-12 text-red-600">
+        <AlertTriangle className="mx-auto h-8 w-8 mb-2" />
+        <p>{error}</p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Eventos</CardTitle>
+            <CalendarDays className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats?.total_events || 0}</div>
+            <p className="text-xs text-muted-foreground">
+              {stats?.confirmed_events || 0} confirmados
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Faturamento Mensal</CardTitle>
+            <DollarSign className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {formatCurrency(stats?.monthly_revenue)}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              No mês atual
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Propostas Pendentes</CardTitle>
+            <Clock className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats?.pending_proposals || 0}</div>
+            <p className="text-xs text-muted-foreground">
+              Aguardando resposta
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Novos Clientes</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">+{stats?.new_clients_this_month || 0}</div>
+            <p className="text-xs text-muted-foreground">
+              Neste mês
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Charts */}
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+        <div className="lg:col-span-3">
+          {monthlyRevenue.length > 0 ? (
+            <MonthlyRevenueBarChart data={monthlyRevenue} />
+          ) : (
+            <Card className="h-full flex items-center justify-center">
+              <div className="text-center text-gray-500">
+                <BarChart2 className="mx-auto h-8 w-8 mb-2" />
+                <p>Sem dados de faturamento para exibir.</p>
+              </div>
+            </Card>
+          )}
+        </div>
+        <div className="lg:col-span-2">
+          {statusDistribution.length > 0 ? (
+            <EventStatusPieChart data={statusDistribution} />
+          ) : (
+            <Card className="h-full flex items-center justify-center">
+              <div className="text-center text-gray-500">
+                <PieChart className="mx-auto h-8 w-8 mb-2" />
+                <p>Sem dados de status para exibir.</p>
+              </div>
+            </Card>
+          )}
+        </div>
+      </div>
+
+      {/* Upcoming Events & Alerts */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Próximos Eventos</CardTitle>
+            <CardDescription>Seus próximos 5 eventos confirmados.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {upcomingEvents.length > 0 ? (
+                upcomingEvents.map((event) => (
+                  <div key={event.id} className="flex items-center justify-between p-3 border rounded-lg">
+                    <div className="flex-1">
+                      <h4 className="font-medium">{event.title}</h4>
+                      <p className="text-sm text-gray-600">{event.clientName}</p>
+                      <div className="flex items-center space-x-2 mt-1">
+                        <span className="text-sm text-gray-500">
+                          {new Date(event.date).toLocaleDateString('pt-BR', { timeZone: 'UTC' })} às {event.time}
+                        </span>
+                        <span className="text-sm text-gray-500">
+                          • {event.guestCount} convidados
+                        </span>
+                      </div>
+                    </div>
+                    <Badge className={EVENT_STATUS_COLORS[event.status as keyof typeof EVENT_STATUS_COLORS] || "bg-gray-200"}>
+                      {EVENT_STATUS_LABELS[event.status as keyof typeof EVENT_STATUS_LABELS] || event.status}
+                    </Badge>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center text-gray-500 py-8">
+                  <CalendarDays className="mx-auto h-8 w-8 mb-2" />
+                  <p>Nenhum evento confirmado para os próximos dias.</p>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Alertas e Notificações</CardTitle>
+            <CardDescription>Itens que precisam da sua atenção.</CardDescription>
+          </CardHeader>
+          <CardContent>
+             <div className="text-center text-gray-500 py-8">
+                <AlertTriangle className="mx-auto h-8 w-8 mb-2" />
+                <p>Nenhum alerta no momento.</p>
+                <span className="text-xs">(Funcionalidade em desenvolvimento)</span>
+              </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  )
+}
+
 
 export default function Dashboard() {
   const { user, company, isLoading: authLoading, logout } = useAuth()
@@ -23,130 +239,10 @@ export default function Dashboard() {
   const [editingClient, setEditingClient] = useState<any>(null)
 
   useEffect(() => {
-    // Se usuário autenticado ainda não possui empresa, redireciona para onboarding
     if (user && !company && !authLoading) {
       window.location.href = "/onboarding"
     }
   }, [user, company, authLoading])
-
-  if (authLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Carregando BuffetFlow...</p>
-        </div>
-      </div>
-    )
-  }
-
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-orange-50 to-red-50 flex items-center justify-center">
-        <Card className="w-full max-w-md shadow-xl">
-          <CardHeader className="text-center">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">BuffetFlow</h1>
-            <p className="text-gray-600">Sistema de Gestão para Buffets de Festas</p>
-            <Badge className="bg-green-100 text-green-800">MVP</Badge>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="text-center py-8">
-              <CalendarDays className="h-16 w-16 text-orange-600 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
-                Bem-vindo ao BuffetFlow
-              </h3>
-              <p className="text-gray-600 mb-6">
-                O sistema completo para gestão de buffets de festas
-              </p>
-              <Button 
-                className="w-full" 
-                onClick={() => window.location.href = "/auth"}
-              >
-                Acessar Sistema
-              </Button>
-            </div>
-            
-            <div className="border-t pt-4">
-              <h4 className="font-medium text-gray-900 mb-3">Funcionalidades do MVP:</h4>
-              <div className="space-y-2 text-sm text-gray-600">
-                <div className="flex items-center space-x-2">
-                  <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                  <span>Dashboard com visão geral</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                  <span>Cadastro de eventos</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                  <span>Calculadora de custos</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                  <span>Geração de orçamentos</span>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    )
-  }
-
-  // Dados mockados para demonstração
-  const upcomingEvents = [
-    {
-      id: "1",
-      title: "Casamento - João & Maria",
-      date: "2024-01-15",
-      time: "18:00",
-      guestCount: 120,
-      status: "confirmed",
-      clientName: "João Silva"
-    },
-    {
-      id: "2", 
-      title: "Formatura - Turma 2024",
-      date: "2024-01-20",
-      time: "20:00",
-      guestCount: 200,
-      status: "preparing",
-      clientName: "Universidade XYZ"
-    },
-    {
-      id: "3",
-      title: "Aniversário 50 anos",
-      date: "2024-01-25", 
-      time: "19:00",
-      guestCount: 80,
-      status: "quote",
-      clientName: "Ana Santos"
-    }
-  ]
-
-  const stats = {
-    totalEvents: 12,
-    confirmedEvents: 8,
-    monthlyRevenue: 125000,
-    avgGuestCount: 95
-  }
-
-  const alerts = [
-    {
-      id: "1",
-      type: "deadline",
-      title: "Pagamento pendente",
-      message: "Casamento João & Maria - pagamento vence em 2 dias",
-      severity: "high"
-    },
-    {
-      id: "2", 
-      type: "conflict",
-      title: "Possível conflito de agenda",
-      message: "Verificar disponibilidade para 25/01/2024",
-      severity: "medium"
-    }
-  ]
 
   const getStatusColor = (status: string) => {
     return EVENT_STATUS_COLORS[status as keyof typeof EVENT_STATUS_COLORS] || "bg-gray-100 text-gray-800"
@@ -183,14 +279,6 @@ export default function Dashboard() {
     return `${hours}:${minutes}`
   }
 
-  const formatCurrency = (value: number | undefined) => {
-    if (!value) return 'Não informado'
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL'
-    }).format(value)
-  }
-
   const formatCreatedDate = (dateString: string | null | undefined) => {
     if (!dateString) return 'Evento cadastrado'
 
@@ -204,17 +292,57 @@ export default function Dashboard() {
     }
   }
 
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Carregando BuffetFlow...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!user) {
+    // Non-authenticated user landing page
+    return (
+       <div className="min-h-screen bg-gradient-to-br from-orange-50 to-red-50 flex items-center justify-center">
+        <Card className="w-full max-w-md shadow-xl">
+          <CardHeader className="text-center">
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">BuffetFlow</h1>
+            <p className="text-gray-600">Sistema de Gestão para Buffets de Festas</p>
+            <Badge className="bg-green-100 text-green-800">MVP</Badge>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="text-center py-8">
+              <CalendarDays className="h-16 w-16 text-orange-600 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
+                Bem-vindo ao BuffetFlow
+              </h3>
+              <p className="text-gray-600 mb-6">
+                O sistema completo para gestão de buffets de festas
+              </p>
+              <Button 
+                className="w-full" 
+                onClick={() => window.location.href = "/auth"}
+              >
+                Acessar Sistema
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+  
+  // Main application view for authenticated users
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
       <header className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <div className="flex items-center">
               <h1 className="text-2xl font-bold text-gray-900">BuffetFlow</h1>
-              <span className="ml-2 px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">
-                MVP
-              </span>
               {company && (
                 <span className="ml-3 text-sm text-gray-600">
                   {company.name}
@@ -222,13 +350,17 @@ export default function Dashboard() {
               )}
             </div>
             <div className="flex items-center space-x-4">
+               <Button size="sm" onClick={() => {
+                 setActiveTab("events");
+                 setSelectedEvent(null);
+                 setEditingEvent(true);
+               }}>
+                <Plus className="h-4 w-4 mr-2" />
+                Novo Evento
+              </Button>
               <Button variant="outline" size="sm">
                 <Settings className="h-4 w-4 mr-2" />
                 Configurações
-              </Button>
-              <Button size="sm">
-                <Plus className="h-4 w-4 mr-2" />
-                Novo Evento
               </Button>
               <Button variant="ghost" size="sm" onClick={logout}>
                 Sair
@@ -238,7 +370,6 @@ export default function Dashboard() {
         </div>
       </header>
 
-      {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="grid w-full grid-cols-5">
@@ -249,122 +380,8 @@ export default function Dashboard() {
             <TabsTrigger value="financial">Financeiro</TabsTrigger>
           </TabsList>
 
-          {/* Visão Geral */}
-          <TabsContent value="overview" className="space-y-6">
-            {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total Eventos</CardTitle>
-                  <CalendarDays className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{stats.totalEvents}</div>
-                  <p className="text-xs text-muted-foreground">
-                    {stats.confirmedEvents} confirmados
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Faturamento Mensal</CardTitle>
-                  <DollarSign className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">
-                    R$ {stats.monthlyRevenue.toLocaleString()}
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    +20% em relação ao mês anterior
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Média Convidados</CardTitle>
-                  <Users className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{stats.avgGuestCount}</div>
-                  <p className="text-xs text-muted-foreground">
-                    por evento
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Alertas</CardTitle>
-                  <AlertTriangle className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{alerts.length}</div>
-                  <p className="text-xs text-muted-foreground">
-                    precisam atenção
-                  </p>
-                </CardContent>
-              </Card>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Próximos Eventos */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Próximos Eventos</CardTitle>
-                  <CardDescription>Eventos confirmados e em preparação</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {upcomingEvents.map((event) => (
-                      <div key={event.id} className="flex items-center justify-between p-3 border rounded-lg">
-                        <div className="flex-1">
-                          <h4 className="font-medium">{event.title}</h4>
-                          <p className="text-sm text-gray-600">{event.clientName}</p>
-                          <div className="flex items-center space-x-2 mt-1">
-                            <span className="text-sm text-gray-500">
-                              {event.date} às {event.time}
-                            </span>
-                            <span className="text-sm text-gray-500">
-                              • {event.guestCount} convidados
-                            </span>
-                          </div>
-                        </div>
-                        <Badge className={getStatusColor(event.status)}>
-                          {getStatusText(event.status)}
-                        </Badge>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Alertas */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Alertas e Notificações</CardTitle>
-                  <CardDescription>Itens que precisam da sua atenção</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {alerts.map((alert) => (
-                      <div key={alert.id} className="p-3 border rounded-lg">
-                        <div className="flex items-start space-x-3">
-                          <AlertTriangle className={`h-5 w-5 mt-0.5 ${
-                            alert.severity === 'high' ? 'text-red-500' : 'text-yellow-500'
-                          }`} />
-                          <div className="flex-1">
-                            <h4 className="font-medium">{alert.title}</h4>
-                            <p className="text-sm text-gray-600">{alert.message}</p>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+          <TabsContent value="overview">
+            <OverviewTab />
           </TabsContent>
 
           {/* Eventos */}
@@ -655,36 +672,28 @@ export default function Dashboard() {
             )}
           </TabsContent>
 
-          {/* Financeiro */}
           <TabsContent value="financial" className="space-y-6">
             <Card>
               <CardHeader>
                 <CardTitle>Controle Financeiro</CardTitle>
-                <CardDescription>Calcule custos, gere orçamentos e acompanhe o fluxo de caixa</CardDescription>
+                <CardDescription>Em breve</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="text-center py-12">
+                 <div className="text-center py-12">
                   <DollarSign className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                   <h3 className="text-lg font-medium text-gray-900 mb-2">
                     Módulo Financeiro em Desenvolvimento
                   </h3>
-                  <p className="text-gray-600 mb-4">
-                    Calculadora de custos e geração de orçamentos em breve.
-                  </p>
-                  <Button variant="outline">
-                    Ver Protótipo
-                  </Button>
                 </div>
               </CardContent>
             </Card>
           </TabsContent>
 
-          {/* Agenda */}
           <TabsContent value="calendar" className="space-y-6">
             <Card>
               <CardHeader>
                 <CardTitle>Agenda Visual</CardTitle>
-                <CardDescription>Visualize eventos em formato de calendário</CardDescription>
+                <CardDescription>Em breve</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="text-center py-12">
@@ -692,12 +701,6 @@ export default function Dashboard() {
                   <h3 className="text-lg font-medium text-gray-900 mb-2">
                     Calendário Interativo em Desenvolvimento
                   </h3>
-                  <p className="text-gray-600 mb-4">
-                    Agenda visual com alertas de conflitos em breve.
-                  </p>
-                  <Button variant="outline">
-                    Ver Mockup
-                  </Button>
                 </div>
               </CardContent>
             </Card>
