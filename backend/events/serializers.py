@@ -41,4 +41,5 @@ class EventListSerializer(serializers.ModelSerializer):
         model = Event
         fields = ('id', 'title', 'event_type', 'event_type_display', 'status', 'status_display',
                  'event_date', 'start_time', 'end_time', 'guest_count', 'client_name',
-                 'estimated_cost', 'final_price', 'value', 'is_conflicting', 'proposal_validity_date')
+                 'client_email', 'client_phone', 'estimated_cost', 'final_price', 'value',
+                 'is_conflicting', 'proposal_validity_date')
