@@ -17,7 +17,8 @@ import {
   Plus,
   Edit,
   Eye,
-  Trash2
+  Trash2,
+  DollarSign
 } from "lucide-react"
 import { EventForm } from "./event-form"
 import { eventsAPI } from "@/services/api"
@@ -133,6 +134,14 @@ export function EventsList({ companyId, onEventSelect, onCreateNew }: EventsList
     if (!timeString) return '--:--'
     const [hours, minutes] = timeString.split(':')
     return `${hours}:${minutes}`
+  }
+
+  const formatCurrency = (value: number | undefined) => {
+    if (!value) return 'Não informado'
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    }).format(value)
   }
 
   if (showForm || editingEvent) {
@@ -267,7 +276,7 @@ export function EventsList({ companyId, onEventSelect, onCreateNew }: EventsList
                       </Badge>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm text-gray-600">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 text-sm text-gray-600">
                       <div className="flex items-center space-x-2">
                         <CalendarDays className="h-4 w-4" />
                         <span>{formatDate(event.event_date)}</span>
@@ -283,6 +292,10 @@ export function EventsList({ companyId, onEventSelect, onCreateNew }: EventsList
                       <div className="flex items-center space-x-2">
                         <User className="h-4 w-4" />
                         <span>{event.client_name}</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <DollarSign className="h-4 w-4" />
+                        <span>{formatCurrency(event.value)}</span>
                       </div>
                     </div>
 

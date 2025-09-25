@@ -190,6 +190,27 @@ export default function Dashboard() {
     return `${hours}:${minutes}`
   }
 
+  const formatCurrency = (value: number | undefined) => {
+    if (!value) return 'Não informado'
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    }).format(value)
+  }
+
+  const formatCreatedDate = (dateString: string | null | undefined) => {
+    if (!dateString) return 'Evento cadastrado'
+
+    try {
+      const date = new Date(dateString)
+      if (isNaN(date.getTime())) return 'Evento cadastrado'
+
+      return `Evento cadastrado em ${date.toLocaleDateString('pt-BR')}`
+    } catch (error) {
+      return 'Evento cadastrado'
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -408,7 +429,7 @@ export default function Dashboard() {
                             </Badge>
                           </div>
                           <CardDescription>
-                            Evento cadastrado em {new Date(selectedEvent.created_at).toLocaleDateString('pt-BR')}
+                            {formatCreatedDate(selectedEvent.created_at)}
                           </CardDescription>
                         </div>
                       </div>
@@ -456,6 +477,10 @@ export default function Dashboard() {
                             <span>{selectedEvent.venue_location}</span>
                           </div>
                         )}
+                        <div className="flex items-center space-x-2">
+                          <DollarSign className="h-4 w-4 text-gray-500" />
+                          <span>{formatCurrency(selectedEvent.value)}</span>
+                        </div>
                       </CardContent>
                     </Card>
                   </div>
