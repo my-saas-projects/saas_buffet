@@ -15,9 +15,16 @@ interface ClientFormData {
   phone: string
 }
 
+interface Client {
+  id: string
+  name: string
+  email: string
+  phone: string
+}
+
 interface ClientFormProps {
   clientId?: string
-  onSuccess?: () => void
+  onSuccess?: (client?: Client) => void
   onCancel?: () => void
   initialData?: Partial<ClientFormData>
 }
@@ -69,21 +76,25 @@ export function ClientForm({ clientId, onSuccess, onCancel, initialData }: Clien
         phone: formData.phone.trim()
       }
 
+      let clientData: Client | undefined
+
       if (clientId) {
-        await clientsAPI.update(clientId, payload)
+        const response = await clientsAPI.update(clientId, payload)
+        clientData = response.data
         toast({
           title: "Cliente atualizado",
           description: "As informações do cliente foram atualizadas com sucesso.",
         })
       } else {
-        await clientsAPI.create(payload)
+        const response = await clientsAPI.create(payload)
+        clientData = response.data
         toast({
           title: "Cliente criado",
           description: "Novo cliente foi cadastrado com sucesso.",
         })
       }
 
-      onSuccess?.()
+      onSuccess?.(clientData)
     } catch (error: any) {
       console.error('Erro ao salvar cliente:', error)
 

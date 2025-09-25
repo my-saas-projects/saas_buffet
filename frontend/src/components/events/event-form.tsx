@@ -11,6 +11,8 @@ import { CalendarDays, Clock, Users, MapPin, User, X, Plus } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { eventsAPI, clientsAPI } from "@/services/api"
 import { EVENT_STATUS, EVENT_STATUS_OPTIONS, EventStatus } from "@/lib/constants"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { ClientForm } from "@/components/clients/client-form"
 
 interface EventFormData {
   eventType: string
@@ -46,6 +48,7 @@ export function EventForm({ companyId, eventId, onSuccess, onCancel, initialData
   const [isLoading, setIsLoading] = useState(false)
   const [clients, setClients] = useState<Client[]>([])
   const [loadingClients, setLoadingClients] = useState(true)
+  const [showClientModal, setShowClientModal] = useState(false)
   const [formData, setFormData] = useState<EventFormData>({
     eventType: initialData?.eventType || "",
     title: initialData?.title || "",
@@ -83,11 +86,32 @@ export function EventForm({ companyId, eventId, onSuccess, onCancel, initialData
     }
   }
 
+  const handleNewClientSuccess = async (newClient: Client) => {
+    setShowClientModal(false)
+    await loadClients()
+    updateField("clientId", newClient.id)
+    toast({
+      title: "Cliente criado com sucesso!",
+      description: `${newClient.name} foi adicionado e selecionado.`,
+    })
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
 
     try {
+      const selectedClient = clients.find(c => String(c.id) === formData.clientId)
+
+      if (!selectedClient) {
+        toast({
+          title: "Erro",
+          description: "Por favor, selecione um cliente válido.",
+          variant: "destructive",
+        })
+        return
+      }
+
       const eventData = {
         event_type: formData.eventType,
         title: formData.title,
@@ -95,6 +119,9 @@ export function EventForm({ companyId, eventId, onSuccess, onCancel, initialData
         start_time: formData.startTime,
         end_time: formData.endTime,
         client: parseInt(formData.clientId),
+        client_name: selectedClient.name,
+        client_email: selectedClient.email,
+        client_phone: selectedClient.phone,
         guest_count: parseInt(formData.guestCount),
         venue_location: formData.venue,
         value: formData.value ? parseFloat(formData.value) : null,
@@ -262,7 +289,7 @@ export function EventForm({ companyId, eventId, onSuccess, onCancel, initialData
                     </SelectTrigger>
                     <SelectContent>
                       {clients.map(client => (
-                        <SelectItem key={client.id} value={client.id}>
+                        <SelectItem key={client.id} value={String(client.id)}>
                           <div className="flex flex-col">
                             <span>{client.name}</span>
                             <span className="text-xs text-gray-500">{client.email} • {client.phone}</span>
@@ -271,14 +298,26 @@ export function EventForm({ companyId, eventId, onSuccess, onCancel, initialData
                       ))}
                     </SelectContent>
                   </Select>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => window.open('/clients/new', '_blank')}
-                    className="px-3"
-                  >
-                    <Plus className="h-4 w-4" />
-                  </Button>
+                  <Dialog open={showClientModal} onOpenChange={setShowClientModal}>
+                    <DialogTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="px-3"
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-2xl">
+                      <DialogHeader>
+                        <DialogTitle>Adicionar Novo Cliente</DialogTitle>
+                      </DialogHeader>
+                      <ClientForm
+                        onSuccess={handleNewClientSuccess}
+                        onCancel={() => setShowClientModal(false)}
+                      />
+                    </DialogContent>
+                  </Dialog>
                 </div>
                 {clients.length === 0 && !loadingClients && (
                   <p className="text-sm text-amber-600">
@@ -287,7 +326,7 @@ export function EventForm({ companyId, eventId, onSuccess, onCancel, initialData
                       type="button"
                       variant="link"
                       className="p-0 h-auto text-sm"
-                      onClick={() => window.open('/clients/new', '_blank')}
+                      onClick={() => setShowClientModal(true)}
                     >
                       Cadastre o primeiro cliente
                     </Button>
