@@ -1,10 +1,9 @@
 "use client"
 
-import { useState, useEffect, use } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { useRouter } from "next/navigation"
 import { clientsAPI, eventsAPI } from "@/services/api"
 import { Client } from "@/lib/types"
 import {
@@ -13,7 +12,6 @@ import {
   Mail,
   Phone,
   Calendar,
-  Edit,
   ArrowLeft,
   CalendarDays,
   FileText,
@@ -21,9 +19,9 @@ import {
   CreditCard,
   Hash,
   Building,
-  UserCheck
+  UserCheck,
+  Edit
 } from "lucide-react"
-
 
 interface ClientEvent {
   id: string
@@ -33,15 +31,13 @@ interface ClientEvent {
   guest_count: number
 }
 
-interface ClientDetailPageProps {
-  params: Promise<{
-    id: string
-  }>
+interface ClientDetailsProps {
+  clientId: string
+  onBack: () => void
+  onEdit: (client: Client) => void
 }
 
-export default function ClientDetailPage({ params }: ClientDetailPageProps) {
-  const resolvedParams = use(params)
-  const router = useRouter()
+export function ClientDetails({ clientId, onBack, onEdit }: ClientDetailsProps) {
   const [client, setClient] = useState<Client | null>(null)
   const [events, setEvents] = useState<ClientEvent[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -49,13 +45,13 @@ export default function ClientDetailPage({ params }: ClientDetailPageProps) {
 
   useEffect(() => {
     loadClientData()
-  }, [resolvedParams.id])
+  }, [clientId])
 
   const loadClientData = async () => {
     try {
       setIsLoading(true)
       const [clientResponse, eventsResponse] = await Promise.all([
-        clientsAPI.get(resolvedParams.id),
+        clientsAPI.get(clientId),
         eventsAPI.list()
       ])
 
@@ -63,7 +59,7 @@ export default function ClientDetailPage({ params }: ClientDetailPageProps) {
 
       // Filter events for this client
       const clientEvents = (eventsResponse.data.results || eventsResponse.data || [])
-        .filter((event: any) => event.client === parseInt(resolvedParams.id))
+        .filter((event: any) => event.client === parseInt(clientId))
 
       setEvents(clientEvents)
     } catch (error) {
@@ -111,7 +107,7 @@ export default function ClientDetailPage({ params }: ClientDetailPageProps) {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto py-6 space-y-6">
+      <div className="space-y-6">
         <Card>
           <CardContent className="pt-6">
             <div className="animate-pulse space-y-4">
@@ -127,17 +123,17 @@ export default function ClientDetailPage({ params }: ClientDetailPageProps) {
 
   if (error || !client) {
     return (
-      <div className="container mx-auto py-6">
+      <div className="space-y-6">
         <Card>
           <CardContent className="pt-6 text-center">
             <p className="text-red-600">{error || 'Cliente não encontrado'}</p>
             <Button
               variant="outline"
-              onClick={() => router.push('/clients')}
+              onClick={onBack}
               className="mt-4"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Voltar para Clientes
+              Voltar para Lista
             </Button>
           </CardContent>
         </Card>
@@ -146,14 +142,14 @@ export default function ClientDetailPage({ params }: ClientDetailPageProps) {
   }
 
   return (
-    <div className="container mx-auto py-6 space-y-6">
+    <div className="space-y-6">
       {/* Header */}
       <div className="flex justify-between items-center">
         <div className="flex items-center space-x-4">
           <Button
             variant="outline"
             size="sm"
-            onClick={() => router.push('/clients')}
+            onClick={onBack}
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
             Voltar
@@ -164,7 +160,7 @@ export default function ClientDetailPage({ params }: ClientDetailPageProps) {
           </div>
         </div>
         <Button
-          onClick={() => router.push(`/clients/${client.id}/edit`)}
+          onClick={() => onEdit(client)}
         >
           <Edit className="h-4 w-4 mr-2" />
           Editar Cliente
@@ -355,8 +351,7 @@ export default function ClientDetailPage({ params }: ClientDetailPageProps) {
                   {events.map((event) => (
                     <div
                       key={event.id}
-                      className="border rounded-lg p-4 hover:bg-gray-50 cursor-pointer"
-                      onClick={() => router.push(`/events/${event.id}`)}
+                      className="border rounded-lg p-4 hover:bg-gray-50"
                     >
                       <div className="flex justify-between items-start">
                         <div className="flex-1">

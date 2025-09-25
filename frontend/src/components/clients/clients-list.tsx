@@ -4,38 +4,38 @@ import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Badge } from "@/components/ui/badge"
 import {
   User,
+  Building2,
   Search,
   Plus,
   Edit,
   Eye,
   Trash2,
   Phone,
-  Mail
+  Mail,
+  FileText,
+  MapPin,
+  Calendar
 } from "lucide-react"
 import { ClientForm } from "./client-form"
 import { clientsAPI } from "@/services/api"
+import { Client } from "@/lib/types"
 
-interface Client {
-  id: string
-  name: string
-  email: string
-  phone: string
-  created_at: string
-  updated_at: string
-}
 
 interface ClientsListProps {
   onClientSelect?: (client: Client) => void
   onCreateNew?: () => void
+  editingClient?: Client | null
+  onEditComplete?: () => void
+  onEdit?: (client: Client) => void
 }
 
-export function ClientsList({ onClientSelect, onCreateNew }: ClientsListProps) {
+export function ClientsList({ onClientSelect, onCreateNew, editingClient, onEditComplete, onEdit }: ClientsListProps) {
   const [clients, setClients] = useState<Client[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
-  const [editingClient, setEditingClient] = useState<Client | null>(null)
   const [searchTerm, setSearchTerm] = useState("")
 
   useEffect(() => {
@@ -66,11 +66,19 @@ export function ClientsList({ onClientSelect, onCreateNew }: ClientsListProps) {
     }
   }
 
-  const filteredClients = clients.filter(client =>
-    client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    client.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    client.phone.toLowerCase().includes(searchTerm.toLowerCase())
-  )
+  const filteredClients = clients.filter(client => {
+    const searchLower = searchTerm.toLowerCase()
+    return (
+      client.name.toLowerCase().includes(searchLower) ||
+      client.email.toLowerCase().includes(searchLower) ||
+      client.phone.toLowerCase().includes(searchLower) ||
+      (client.full_name && client.full_name.toLowerCase().includes(searchLower)) ||
+      (client.fantasy_name && client.fantasy_name.toLowerCase().includes(searchLower)) ||
+      (client.corporate_name && client.corporate_name.toLowerCase().includes(searchLower)) ||
+      (client.cpf && client.cpf.includes(searchTerm)) ||
+      (client.cnpj && client.cnpj.includes(searchTerm))
+    )
+  })
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
@@ -92,12 +100,12 @@ export function ClientsList({ onClientSelect, onCreateNew }: ClientsListProps) {
         } : undefined}
         onSuccess={() => {
           setShowForm(false)
-          setEditingClient(null)
+          onEditComplete?.()
           loadClients()
         }}
         onCancel={() => {
           setShowForm(false)
-          setEditingClient(null)
+          onEditComplete?.()
         }}
       />
     )
@@ -168,58 +176,113 @@ export function ClientsList({ onClientSelect, onCreateNew }: ClientsListProps) {
         </Card>
       ) : (
         <div className="space-y-4">
-          {filteredClients.map((client) => (
-            <Card key={client.id} className="hover:shadow-md transition-shadow">
-              <CardContent className="pt-6">
-                <div className="flex justify-between items-start">
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-3 mb-2">
-                      <h3 className="text-lg font-medium text-gray-900">{client.name}</h3>
+          {filteredClients.map((client) => {
+            const isJuridica = client.client_type === 'JURIDICA'
+            const displayName = isJuridica
+              ? (client.fantasy_name || client.corporate_name || client.name)
+              : (client.full_name || client.name)
+            const secondaryName = isJuridica && client.fantasy_name && client.corporate_name
+              ? client.corporate_name
+              : null
+
+            return (
+              <Card key={client.id} className={`hover:shadow-md transition-all duration-200 border-l-4 ${
+                isJuridica ? 'border-l-blue-500 hover:border-l-blue-600' : 'border-l-green-500 hover:border-l-green-600'
+              }`}>
+                <CardContent className="pt-6">
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-3 mb-3">
+                        <div className={`p-2 rounded-full ${
+                          isJuridica ? 'bg-blue-100 text-blue-600' : 'bg-green-100 text-green-600'
+                        }`}>
+                          {isJuridica ? (
+                            <Building2 className="h-5 w-5" />
+                          ) : (
+                            <User className="h-5 w-5" />
+                          )}
+                        </div>
+                        <div>
+                          <h3 className="text-lg font-semibold text-gray-900">
+                            {displayName}
+                          </h3>
+                          {secondaryName && (
+                            <p className="text-sm text-gray-600 font-medium">
+                              {secondaryName}
+                            </p>
+                          )}
+                        </div>
+                        <Badge
+                          variant="secondary"
+                          className={`ml-2 ${
+                            isJuridica
+                              ? 'bg-blue-50 text-blue-700 border-blue-200'
+                              : 'bg-green-50 text-green-700 border-green-200'
+                          }`}
+                        >
+                          {isJuridica ? 'Pessoa Jurídica' : 'Pessoa Física'}
+                        </Badge>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 text-sm text-gray-600">
+                        <div className="flex items-center space-x-2">
+                          <Mail className="h-4 w-4 text-gray-400" />
+                          <span className="truncate">{client.email}</span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Phone className="h-4 w-4 text-gray-400" />
+                          <span>{client.phone}</span>
+                        </div>
+                        {(client.cpf || client.cnpj) && (
+                          <div className="flex items-center space-x-2">
+                            <FileText className="h-4 w-4 text-gray-400" />
+                            <span>{isJuridica ? client.cnpj : client.cpf}</span>
+                          </div>
+                        )}
+                        {client.address && (
+                          <div className="flex items-center space-x-2">
+                            <MapPin className="h-4 w-4 text-gray-400" />
+                            <span className="truncate">{client.address}</span>
+                          </div>
+                        )}
+                        <div className="flex items-center space-x-2 md:col-span-1">
+                          <Calendar className="h-4 w-4 text-gray-400" />
+                          <span>Desde {formatDate(client.created_at)}</span>
+                        </div>
+                      </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
-                      <div className="flex items-center space-x-2">
-                        <Mail className="h-4 w-4" />
-                        <span>{client.email}</span>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Phone className="h-4 w-4" />
-                        <span>{client.phone}</span>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <User className="h-4 w-4" />
-                        <span>Criado em {formatDate(client.created_at)}</span>
-                      </div>
+                    <div className="flex space-x-2 ml-4">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => onClientSelect?.(client)}
+                        className="hover:bg-blue-50 hover:text-blue-600 hover:border-blue-300"
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => onEdit?.(client)}
+                        className="hover:bg-green-50 hover:text-green-600 hover:border-green-300"
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleDelete(client.id.toString())}
+                        className="hover:bg-red-50 hover:text-red-600 hover:border-red-300"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                     </div>
                   </div>
-
-                  <div className="flex space-x-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => onClientSelect?.(client)}
-                    >
-                      <Eye className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setEditingClient(client)}
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleDelete(client.id)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                </CardContent>
+              </Card>
+            )
+          })}
         </div>
       )}
     </div>

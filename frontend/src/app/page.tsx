@@ -10,6 +10,7 @@ import { useAuth } from "@/hooks/use-auth"
 import { EventsList } from "@/components/events/events-list"
 import { EventForm } from "@/components/events/event-form"
 import { ClientsList } from "@/components/clients/clients-list"
+import { ClientDetails } from "@/components/clients/client-details"
 import { EVENT_STATUS_COLORS, EVENT_STATUS_LABELS, EVENT_STATUS_OPTIONS } from "@/lib/constants"
 
 export default function Dashboard() {
@@ -17,6 +18,7 @@ export default function Dashboard() {
   const [activeTab, setActiveTab] = useState("overview")
   const [selectedEvent, setSelectedEvent] = useState(null)
   const [editingEvent, setEditingEvent] = useState(false)
+  const [selectedClient, setSelectedClient] = useState(null)
 
   useEffect(() => {
     // Se usuário autenticado ainda não possui empresa, redireciona para onboarding
@@ -601,12 +603,22 @@ export default function Dashboard() {
 
           {/* Clientes */}
           <TabsContent value="clients" className="space-y-6">
-            <ClientsList
-              onClientSelect={(client) => {
-                // Navegação para detalhes do cliente
-                window.location.href = `/clients/${client.id}`
-              }}
-            />
+            {selectedClient ? (
+              // Client Details View
+              <ClientDetails
+                clientId={selectedClient.id}
+                onBack={() => setSelectedClient(null)}
+                onEdit={(client) => {
+                  // TODO: Implementar edição de cliente no futuro
+                  console.log('Editar cliente:', client)
+                }}
+              />
+            ) : (
+              // Clients List View
+              <ClientsList
+                onClientSelect={setSelectedClient}
+              />
+            )}
           </TabsContent>
 
           {/* Financeiro */}
