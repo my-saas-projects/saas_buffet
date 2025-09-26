@@ -108,12 +108,37 @@ export function EventDataTable({
     }
   }, [])
 
+  const handleGeneratePDF = useCallback(async (event: EventListItem) => {
+    try {
+      const response = await eventsAPI.generateProposalPDF(event.id.toString())
+
+      // Create blob URL and download
+      const blob = new Blob([response.data], { type: 'application/pdf' })
+      const url = window.URL.createObjectURL(blob)
+
+      // Create temporary link and trigger download
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `orcamento-evento-${event.id}.pdf`
+      document.body.appendChild(link)
+      link.click()
+
+      // Cleanup
+      document.body.removeChild(link)
+      window.URL.revokeObjectURL(url)
+    } catch (error: any) {
+      console.error('Erro ao gerar PDF:', error)
+      alert('Erro ao gerar PDF. Tente novamente.')
+    }
+  }, [])
+
   // Memoize columns to prevent recreation on every render
   const columns = useMemo(() => createEventColumns({
     onView: handleView,
     onEdit: handleEdit,
     onDelete: handleDelete,
-  }), [handleView, handleEdit, handleDelete])
+    onGeneratePDF: handleGeneratePDF,
+  }), [handleView, handleEdit, handleDelete, handleGeneratePDF])
 
   // Filter data by status
   const filteredData = data.filter(event => {

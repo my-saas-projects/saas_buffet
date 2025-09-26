@@ -82,6 +82,11 @@ export const eventsAPI = {
         end_date: endDate,
       },
     }),
+
+  generateProposalPDF: (eventId: string) =>
+    api.get(`/events/${eventId}/generate-proposal-pdf/`, {
+      responseType: 'blob',
+    }),
 };
 
 export const companiesAPI = {

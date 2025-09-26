@@ -3,6 +3,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from django.db.models import Q
+from django.http import HttpResponse
 from datetime import datetime, date
 from .models import Event, MenuItem, EventMenu
 from .serializers import (
@@ -13,6 +14,7 @@ from .serializers import (
     MenuItemSerializer,
     EventMenuSerializer
 )
+from .pdf_service import generate_event_proposal_pdf
 
 def validate_event_status_change(event_data):
     """
@@ -284,3 +286,25 @@ def event_cost_calculation_view(request, event_id):
             cost_calc = serializer.save(event=event, calculated_by=request.user)
             return Response(CostCalculationSerializer(cost_calc).data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
+def generate_proposal_pdf_view(request, event_id):
+    """Generate and download a proposal PDF for an event"""
+    event = get_object_or_404(Event, id=event_id, company=request.user.company)
+
+    try:
+        # Generate PDF
+        pdf_content = generate_event_proposal_pdf(event)
+
+        # Create response
+        response = HttpResponse(pdf_content, content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="orcamento-evento-{event.id}.pdf"'
+
+        return response
+
+    except Exception as e:
+        return Response(
+            {'error': f'Erro ao gerar PDF: {str(e)}'},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )

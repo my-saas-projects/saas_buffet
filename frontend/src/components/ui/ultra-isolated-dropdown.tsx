@@ -6,10 +6,11 @@ interface UltraIsolatedDropdownProps {
   onView: () => void
   onEdit: () => void
   onDelete: () => void
+  onGeneratePDF?: () => void
 }
 
 // Componente ultra isolado sem dependências externas
-const UltraIsolatedDropdown = memo(function UltraIsolatedDropdown({ onView, onEdit, onDelete }: UltraIsolatedDropdownProps) {
+const UltraIsolatedDropdown = memo(function UltraIsolatedDropdown({ onView, onEdit, onDelete, onGeneratePDF }: UltraIsolatedDropdownProps) {
   const [isOpen, setIsOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
@@ -40,6 +41,13 @@ const UltraIsolatedDropdown = memo(function UltraIsolatedDropdown({ onView, onEd
     onDelete()
     setIsOpen(false)
   }, [onDelete])
+
+  const handleGeneratePDF = useCallback((e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    onGeneratePDF?.()
+    setIsOpen(false)
+  }, [onGeneratePDF])
 
   // Fechar dropdown ao clicar fora
   useEffect(() => {
@@ -112,6 +120,20 @@ const UltraIsolatedDropdown = memo(function UltraIsolatedDropdown({ onView, onEd
             </svg>
             Editar
           </button>
+
+          {onGeneratePDF && (
+            <button
+              type="button"
+              className="flex w-full items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-150"
+              onClick={handleGeneratePDF}
+              role="menuitem"
+            >
+              <svg className="w-4 h-4 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+              </svg>
+              Gerar Orçamento PDF
+            </button>
+          )}
           
           <div className="border-t border-gray-100 my-1" />
           

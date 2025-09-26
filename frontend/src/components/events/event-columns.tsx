@@ -12,9 +12,10 @@ interface ColumnProps {
   onView: (event: EventListItem) => void
   onEdit: (event: EventListItem) => void
   onDelete: (event: EventListItem) => void
+  onGeneratePDF?: (event: EventListItem) => void
 }
 
-export const createEventColumns = ({ onView, onEdit, onDelete }: ColumnProps): ColumnDef<EventListItem>[] => [
+export const createEventColumns = ({ onView, onEdit, onDelete, onGeneratePDF }: ColumnProps): ColumnDef<EventListItem>[] => [
   {
     accessorKey: "event_type",
     header: ({ column }) => (
@@ -201,6 +202,7 @@ export const createEventColumns = ({ onView, onEdit, onDelete }: ColumnProps): C
           onView={() => onView(event)}
           onEdit={() => onEdit(event)}
           onDelete={() => onDelete(event)}
+          onGeneratePDF={onGeneratePDF ? () => onGeneratePDF(event) : undefined}
         />
       )
     },

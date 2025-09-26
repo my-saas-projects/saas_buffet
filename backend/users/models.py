@@ -33,6 +33,7 @@ class Company(models.Model):
     postal_code = models.CharField(max_length=10, blank=True, default='')
     
     # Business settings
+    logo = models.ImageField(upload_to='logos/', blank=True, null=True)
     default_profit_margin = models.DecimalField(max_digits=5, decimal_places=2, default=30.00)
     max_events_per_month = models.IntegerField(default=50)
     
