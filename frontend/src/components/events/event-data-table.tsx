@@ -30,28 +30,32 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { ChevronDown, Search, Plus, Settings2 } from "lucide-react"
-import { clientsAPI } from "@/services/api"
-import { Client } from "@/lib/types"
-import { createColumns } from "./columns"
-import { ClientForm } from "./client-form"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { ChevronDown, Search, Plus, Settings2, CalendarDays } from "lucide-react"
+import { eventsAPI } from "@/services/api"
+import { EventListItem } from "@/lib/types"
+import { EVENT_STATUS_OPTIONS } from "@/lib/constants"
+import { createEventColumns } from "./event-columns"
+import { EventForm } from "./event-form"
 
-interface ClientDataTableProps {
-  onClientSelect?: (client: Client) => void
+interface EventDataTableProps {
+  companyId: string
+  onEventSelect?: (event: EventListItem) => void
   onCreateNew?: () => void
-  editingClient?: Client | null
+  editingEvent?: EventListItem | null
   onEditComplete?: () => void
-  onEdit?: (client: Client) => void
+  onEdit?: (event: EventListItem) => void
 }
 
-export function ClientDataTable({
-  onClientSelect,
+export function EventDataTable({
+  companyId,
+  onEventSelect,
   onCreateNew,
-  editingClient,
+  editingEvent,
   onEditComplete,
   onEdit
-}: ClientDataTableProps) {
-  const [data, setData] = useState<Client[]>([])
+}: EventDataTableProps) {
+  const [data, setData] = useState<EventListItem[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [showForm, setShowForm] = useState(false)
@@ -61,17 +65,18 @@ export function ClientDataTable({
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
   const [globalFilter, setGlobalFilter] = useState("")
+  const [statusFilter, setStatusFilter] = useState<string>("all")
 
   // Load data
-  const loadClients = async () => {
+  const loadEvents = async () => {
     try {
       setIsLoading(true)
       setError(null)
-      const response = await clientsAPI.list()
-      setData(response.data.results || response.data || [])
+      const response = await eventsAPI.list()
+      setData(response.data || [])
     } catch (error) {
-      console.error('Erro ao carregar clientes:', error)
-      setError('Erro ao carregar clientes')
+      console.error('Erro ao carregar eventos:', error)
+      setError('Erro ao carregar eventos')
       setData([])
     } finally {
       setIsLoading(false)
@@ -79,44 +84,45 @@ export function ClientDataTable({
   }
 
   useEffect(() => {
-    loadClients()
-  }, [])
+    loadEvents()
+  }, [companyId])
 
   // Action handlers with useCallback to prevent re-renders
-  const handleView = useCallback((client: Client) => {
-    onClientSelect?.(client)
-  }, [onClientSelect])
+  const handleView = useCallback((event: EventListItem) => {
+    onEventSelect?.(event)
+  }, [onEventSelect])
 
-  const handleEdit = useCallback((client: Client) => {
-    onEdit?.(client)
+  const handleEdit = useCallback((event: EventListItem) => {
+    onEdit?.(event)
   }, [onEdit])
 
-  const handleDelete = useCallback(async (client: Client) => {
-    if (confirm('Tem certeza que deseja excluir este cliente?')) {
+  const handleDelete = useCallback(async (event: EventListItem) => {
+    if (confirm('Tem certeza que deseja excluir este evento?')) {
       try {
-        await clientsAPI.delete(client.id.toString())
-        loadClients()
+        await eventsAPI.delete(event.id.toString())
+        loadEvents()
       } catch (error: any) {
-        console.error('Erro ao excluir cliente:', error)
-
-        if (error.response?.status === 500 || error.response?.status === 400) {
-          alert('Não é possível excluir este cliente pois ele possui eventos associados. Remova ou transfira os eventos primeiro.')
-        } else {
-          alert('Erro ao excluir cliente. Tente novamente.')
-        }
+        console.error('Erro ao excluir evento:', error)
+        alert('Erro ao excluir evento. Tente novamente.')
       }
     }
   }, [])
 
   // Memoize columns to prevent recreation on every render
-  const columns = useMemo(() => createColumns({
+  const columns = useMemo(() => createEventColumns({
     onView: handleView,
     onEdit: handleEdit,
     onDelete: handleDelete,
   }), [handleView, handleEdit, handleDelete])
 
+  // Filter data by status
+  const filteredData = data.filter(event => {
+    if (statusFilter === "all") return true
+    return event.status === statusFilter
+  })
+
   const table = useReactTable({
-    data,
+    data: filteredData,
     columns,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
@@ -137,22 +143,43 @@ export function ClientDataTable({
         pageSize: 10,
       },
     },
+    globalFilterFn: (row, columnId, value) => {
+      const event = row.original
+      const searchString = value.toLowerCase()
+
+      return (
+        event.title.toLowerCase().includes(searchString) ||
+        event.client_name.toLowerCase().includes(searchString) ||
+        event.event_type_display?.toLowerCase().includes(searchString) ||
+        event.status_display?.toLowerCase().includes(searchString)
+      )
+    },
   })
 
   // Handle form states
-  if (showForm || editingClient) {
+  if (showForm || editingEvent) {
     return (
-      <ClientForm
-        clientId={editingClient?.id?.toString()}
-        initialData={editingClient ? {
-          name: editingClient.name,
-          email: editingClient.email,
-          phone: editingClient.phone
+      <EventForm
+        companyId={companyId}
+        eventId={editingEvent?.id}
+        initialData={editingEvent ? {
+          eventType: editingEvent.event_type,
+          title: editingEvent.title,
+          date: editingEvent.event_date,
+          startTime: editingEvent.start_time,
+          endTime: editingEvent.end_time,
+          clientId: '',
+          guestCount: editingEvent.guest_count.toString(),
+          venue: '',
+          value: editingEvent.value?.toString() || '',
+          notes: '',
+          status: editingEvent.status,
+          proposalValidityDate: editingEvent.proposal_validity_date || ''
         } : undefined}
         onSuccess={() => {
           setShowForm(false)
           onEditComplete?.()
-          loadClients()
+          loadEvents()
         }}
         onCancel={() => {
           setShowForm(false)
@@ -167,21 +194,21 @@ export function ClientDataTable({
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Clientes</h2>
-          <p className="text-gray-600">Gerencie seus clientes</p>
+          <h2 className="text-2xl font-bold text-gray-900">Eventos</h2>
+          <p className="text-gray-600">Gerencie todos os seus eventos</p>
         </div>
         <Button onClick={() => setShowForm(true)}>
           <Plus className="h-4 w-4 mr-2" />
-          Novo Cliente
+          Novo Evento
         </Button>
       </div>
 
       {/* Table Card */}
       <Card>
         <CardHeader>
-          <CardTitle>Lista de Clientes</CardTitle>
+          <CardTitle>Lista de Eventos</CardTitle>
           <CardDescription>
-            {table.getFilteredRowModel().rows.length} cliente(s) encontrado(s)
+            {table.getFilteredRowModel().rows.length} evento(s) encontrado(s)
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -191,11 +218,26 @@ export function ClientDataTable({
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                 <Input
-                  placeholder="Buscar clientes..."
+                  placeholder="Buscar eventos, clientes..."
                   value={globalFilter ?? ""}
                   onChange={(event) => setGlobalFilter(String(event.target.value))}
                   className="pl-10 max-w-sm"
                 />
+              </div>
+              <div className="w-48">
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos Status</SelectItem>
+                    {EVENT_STATUS_OPTIONS.map(option => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
             <div className="flex items-center space-x-2">
@@ -221,10 +263,12 @@ export function ClientDataTable({
                             column.toggleVisibility(!!value)
                           }
                         >
-                          {column.id === "client_type" ? "Tipo" :
-                           column.id === "created_at" ? "Criado em" :
-                           column.id === "cpf" ? "CPF/CNPJ" :
-                           column.id === "phone" ? "Telefone" :
+                          {column.id === "event_type" ? "Tipo" :
+                           column.id === "client_name" ? "Cliente" :
+                           column.id === "event_date" ? "Data & Hora" :
+                           column.id === "guest_count" ? "Convidados" :
+                           column.id === "value" ? "Valor" :
+                           column.id === "status" ? "Status" :
                            column.id}
                         </DropdownMenuCheckboxItem>
                       )
@@ -238,7 +282,7 @@ export function ClientDataTable({
           {error ? (
             <div className="text-center py-12">
               <p className="text-red-600">{error}</p>
-              <Button variant="outline" onClick={loadClients} className="mt-4">
+              <Button variant="outline" onClick={loadEvents} className="mt-4">
                 Tentar novamente
               </Button>
             </div>
@@ -299,17 +343,18 @@ export function ClientDataTable({
                           colSpan={columns.length}
                           className="h-24 text-center"
                         >
-                          {globalFilter ? (
+                          {globalFilter || statusFilter !== "all" ? (
                             <div>
-                              <p className="text-gray-600 mb-2">Nenhum cliente encontrado</p>
-                              <p className="text-sm text-gray-400">Tente ajustar sua busca</p>
+                              <p className="text-gray-600 mb-2">Nenhum evento encontrado</p>
+                              <p className="text-sm text-gray-400">Tente ajustar sua busca ou filtros</p>
                             </div>
                           ) : (
                             <div>
-                              <p className="text-gray-600 mb-2">Nenhum cliente cadastrado</p>
+                              <CalendarDays className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                              <p className="text-gray-600 mb-2">Nenhum evento cadastrado</p>
                               <Button onClick={() => setShowForm(true)} variant="outline">
                                 <Plus className="h-4 w-4 mr-2" />
-                                Criar primeiro cliente
+                                Criar primeiro evento
                               </Button>
                             </div>
                           )}

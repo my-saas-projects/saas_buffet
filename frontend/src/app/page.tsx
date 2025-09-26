@@ -1,13 +1,13 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { CalendarDays, DollarSign, Users, AlertTriangle, Plus, Settings, ArrowLeft, Clock, MapPin, User, BarChart2, PieChart } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useAuth } from "@/hooks/use-auth"
-import { EventsList } from "@/components/events/events-list"
+import { CustomEventsTable } from "@/components/events/custom-events-table"
 import { EventForm } from "@/components/events/event-form"
 import { ClientDataTable } from "@/components/clients/client-data-table"
 import { ClientDetails } from "@/components/clients/client-details"
@@ -235,7 +235,7 @@ export default function Dashboard() {
   const { user, company, isLoading: authLoading, logout } = useAuth()
   const [activeTab, setActiveTab] = useState("overview")
   const [selectedEvent, setSelectedEvent] = useState<any>(null)
-  const [editingEvent, setEditingEvent] = useState(false)
+  const [editingEvent, setEditingEvent] = useState<any>(null)
   const [selectedClient, setSelectedClient] = useState<any>(null)
   const [editingClient, setEditingClient] = useState<any>(null)
 
@@ -264,6 +264,20 @@ export default function Dashboard() {
       default: return eventType
     }
   }
+
+  // Event handlers with useCallback to prevent infinite re-renders
+  const handleEventSelect = useCallback((event: any) => {
+    setSelectedEvent(event)
+  }, [])
+
+  const handleEventEdit = useCallback((event: any) => {
+    setEditingEvent(event)
+    setSelectedEvent(event)
+  }, [])
+
+  const handleEventEditComplete = useCallback(() => {
+    setEditingEvent(null)
+  }, [])
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
@@ -614,9 +628,12 @@ export default function Dashboard() {
                 )
               ) : (
                 // Events List View
-                <EventsList
+                <CustomEventsTable
                   companyId={company.id}
-                  onEventSelect={setSelectedEvent}
+                  onEventSelect={handleEventSelect}
+                  editingEvent={editingEvent}
+                  onEditComplete={handleEventEditComplete}
+                  onEdit={handleEventEdit}
                 />
               )
             )}
