@@ -18,7 +18,8 @@ import {
   Edit,
   Eye,
   Trash2,
-  DollarSign
+  DollarSign,
+  FileText
 } from "lucide-react"
 import { EventForm } from "./event-form"
 import { eventsAPI } from "@/services/api"
@@ -176,6 +177,30 @@ export function EventsList({ companyId, onEventSelect, onCreateNew }: EventsList
   const handleFormCancel = useCallback(() => {
     setShowForm(false)
     setEditingEvent(null)
+  }, [])
+
+  const handleGeneratePDF = useCallback(async (event: EventListItem) => {
+    try {
+      const response = await eventsAPI.generateProposalPDF(event.id.toString())
+
+      // Create blob URL and download
+      const blob = new Blob([response.data], { type: 'application/pdf' })
+      const url = window.URL.createObjectURL(blob)
+
+      // Create temporary link and trigger download
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `orcamento-evento-${event.id}.pdf`
+      document.body.appendChild(link)
+      link.click()
+
+      // Cleanup
+      document.body.removeChild(link)
+      window.URL.revokeObjectURL(url)
+    } catch (error: any) {
+      console.error('Erro ao gerar PDF:', error)
+      alert('Erro ao gerar PDF. Tente novamente.')
+    }
   }, [])
 
   if (showForm || editingEvent) {
@@ -409,6 +434,16 @@ export function EventsList({ companyId, onEventSelect, onCreateNew }: EventsList
                     >
                       <Edit className="h-4 w-4 mr-1" />
                       Editar
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleGeneratePDF(event)}
+                      className="flex-1"
+                      title="Gerar Orçamento PDF"
+                    >
+                      <FileText className="h-4 w-4 mr-1" />
+                      PDF
                     </Button>
                   </div>
                 </div>

@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { CalendarDays, DollarSign, Users, AlertTriangle, Plus, Settings, ArrowLeft, Clock, MapPin, User, BarChart2, PieChart } from "lucide-react"
+import { CalendarDays, DollarSign, Users, AlertTriangle, Plus, Settings, ArrowLeft, Clock, MapPin, User, BarChart2, PieChart, FileText, Edit, Trash2 } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useAuth } from "@/hooks/use-auth"
 import { EventsView } from "@/components/events/events-view"
@@ -14,7 +14,7 @@ import { ClientDetails } from "@/components/clients/client-details"
 import { ClientForm } from "@/components/clients/client-form"
 import { EventCalendar } from "@/components/calendar/event-calendar"
 import { EVENT_STATUS_COLORS, EVENT_STATUS_LABELS } from "@/lib/constants"
-import { dashboardAPI, financialsAPI } from "@/services/api"
+import { dashboardAPI, financialsAPI, eventsAPI } from "@/services/api"
 import { EventStatusPieChart } from "@/components/charts/EventStatusPieChart"
 import { MonthlyRevenueBarChart } from "@/components/charts/MonthlyRevenueBarChart"
 import { KpiCard } from "@/components/financials/kpi-card"
@@ -444,6 +444,30 @@ export default function Dashboard() {
     setEditingEvent(null)
   }, [])
 
+  const handleGeneratePDF = useCallback(async (event: any) => {
+    try {
+      const response = await eventsAPI.generateProposalPDF(event.id.toString())
+
+      // Create blob URL and download
+      const blob = new Blob([response.data], { type: 'application/pdf' })
+      const url = window.URL.createObjectURL(blob)
+
+      // Create temporary link and trigger download
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `orcamento-evento-${event.id}.pdf`
+      document.body.appendChild(link)
+      link.click()
+
+      // Cleanup
+      document.body.removeChild(link)
+      window.URL.revokeObjectURL(url)
+    } catch (error: any) {
+      console.error('Erro ao gerar PDF:', error)
+      alert('Erro ao gerar PDF. Tente novamente.')
+    }
+  }, [])
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
     return date.toLocaleDateString('pt-BR', {
@@ -781,9 +805,18 @@ export default function Dashboard() {
                         {/* Ações Gerais */}
                         <div className="border-t pt-4">
                           <div className="flex space-x-3">
-                            <Button variant="outline" onClick={() => setEditingEvent(true)}>Editar Evento</Button>
-                            <Button variant="outline">Gerar Orçamento</Button>
-                            <Button variant="destructive">Excluir Evento</Button>
+                            <Button variant="outline" onClick={() => setEditingEvent(true)}>
+                              <Edit className="h-4 w-4 mr-2" />
+                              Editar Evento
+                            </Button>
+                            <Button variant="outline" onClick={() => handleGeneratePDF(selectedEvent)}>
+                              <FileText className="h-4 w-4 mr-2" />
+                              Gerar Orçamento PDF
+                            </Button>
+                            <Button variant="destructive">
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Excluir Evento
+                            </Button>
                           </div>
                         </div>
                       </div>
