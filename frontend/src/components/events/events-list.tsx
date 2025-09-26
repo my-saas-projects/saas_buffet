@@ -133,7 +133,9 @@ export function EventsList({ companyId, onEventSelect, onCreateNew }: EventsList
   }, [events, searchTerm, statusFilter, eventTypeFilter, sortBy, sortOrder])
 
   const formatDate = useCallback((dateString: string) => {
-    const date = new Date(dateString)
+    // Parse the date string and create a date object in local timezone
+    const [year, month, day] = dateString.split('-').map(Number)
+    const date = new Date(year, month - 1, day) // month is 0-indexed
     return date.toLocaleDateString('pt-BR', {
       day: '2-digit',
       month: '2-digit',
@@ -214,11 +216,11 @@ export function EventsList({ companyId, onEventSelect, onCreateNew }: EventsList
           date: editingEvent.event_date,
           startTime: editingEvent.start_time,
           endTime: editingEvent.end_time,
-          clientId: '',
+          clientId: editingEvent.client?.toString() || '',
           guestCount: editingEvent.guest_count.toString(),
           venue: editingEvent.venue_location || '',
           value: editingEvent.value?.toString() || '',
-          notes: '',
+          notes: editingEvent.notes || '',
           status: editingEvent.status,
           proposalValidityDate: editingEvent.proposal_validity_date || ''
         } : undefined}

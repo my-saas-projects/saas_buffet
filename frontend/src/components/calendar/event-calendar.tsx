@@ -10,7 +10,7 @@ import { eventsAPI } from '@/services/api';
 import { useQuery } from '@tanstack/react-query';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { CalendarDays, ChevronLeft, ChevronRight, Home } from 'lucide-react';
+import { CalendarDays, ChevronLeft, ChevronRight, Home, Calendar } from 'lucide-react';
 
 interface EventData {
   id: string;
@@ -65,6 +65,14 @@ const statusColorMap: Record<string, string> = {
 export function EventCalendar({ onEventClick, onDateSelect }: EventCalendarProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewType, setViewType] = useState<'dayGridMonth' | 'timeGridWeek'>('dayGridMonth');
+  const [dateRange, setDateRange] = useState(() => {
+    const start = startOfMonth(new Date());
+    const end = endOfMonth(new Date());
+    return {
+      startDate: format(start, 'yyyy-MM-dd'),
+      endDate: format(end, 'yyyy-MM-dd'),
+    };
+  });
   const calendarRef = useRef<FullCalendar>(null);
 
   // Calculate date range for current view
@@ -87,7 +95,7 @@ export function EventCalendar({ onEventClick, onDateSelect }: EventCalendarProps
     }
   };
 
-  const { startDate, endDate } = getDateRange();
+  const { startDate, endDate } = dateRange;
 
   // Fetch events for the current view
   const { data: eventsResponse, isLoading, error } = useQuery({
@@ -128,9 +136,31 @@ export function EventCalendar({ onEventClick, onDateSelect }: EventCalendarProps
     }
   };
 
-  const handleDatesSet = (dateInfo: { start: Date; end: Date }) => {
-    // Update current date when navigating
-    setCurrentDate(dateInfo.start);
+  const handleDatesSet = (dateInfo: { start: Date; end: Date; view: any }) => {
+    // Update current date and date range when navigating
+    const newDate = dateInfo.start;
+    setCurrentDate(newDate);
+    
+    // Calculate new date range based on current view
+    let newRange;
+    if (viewType === 'dayGridMonth') {
+      const start = startOfMonth(newDate);
+      const end = endOfMonth(newDate);
+      newRange = {
+        startDate: format(start, 'yyyy-MM-dd'),
+        endDate: format(end, 'yyyy-MM-dd'),
+      };
+    } else {
+      // Week view
+      const start = startOfWeek(newDate, { weekStartsOn: 0 });
+      const end = endOfWeek(newDate, { weekStartsOn: 0 });
+      newRange = {
+        startDate: format(start, 'yyyy-MM-dd'),
+        endDate: format(end, 'yyyy-MM-dd'),
+      };
+    }
+    
+    setDateRange(newRange);
   };
 
   const goToToday = () => {
@@ -156,6 +186,27 @@ export function EventCalendar({ onEventClick, onDateSelect }: EventCalendarProps
 
   const changeView = (newViewType: 'dayGridMonth' | 'timeGridWeek') => {
     setViewType(newViewType);
+    
+    // Update date range for new view
+    let newRange;
+    if (newViewType === 'dayGridMonth') {
+      const start = startOfMonth(currentDate);
+      const end = endOfMonth(currentDate);
+      newRange = {
+        startDate: format(start, 'yyyy-MM-dd'),
+        endDate: format(end, 'yyyy-MM-dd'),
+      };
+    } else {
+      // Week view
+      const start = startOfWeek(currentDate, { weekStartsOn: 0 });
+      const end = endOfWeek(currentDate, { weekStartsOn: 0 });
+      newRange = {
+        startDate: format(start, 'yyyy-MM-dd'),
+        endDate: format(end, 'yyyy-MM-dd'),
+      };
+    }
+    setDateRange(newRange);
+    
     const calendarApi = calendarRef.current?.getApi();
     if (calendarApi) {
       calendarApi.changeView(newViewType);
@@ -289,7 +340,7 @@ export function EventCalendar({ onEventClick, onDateSelect }: EventCalendarProps
               select={handleDateSelect}
               selectable={true}
               selectMirror={true}
-              dayMaxEvents={3}
+              dayMaxEvents={false}
               weekends={true}
               datesSet={handleDatesSet}
               height="auto"
@@ -307,6 +358,8 @@ export function EventCalendar({ onEventClick, onDateSelect }: EventCalendarProps
               }}
               eventClassNames="cursor-pointer hover:opacity-80 transition-opacity"
               eventDisplay="block"
+              moreLinkClick="popover"
+              dayMaxEventRows={false}
               dayHeaderClassNames="text-muted-foreground font-medium p-2"
               viewClassNames="fc-custom-view"
               dayCellClassNames="hover:bg-muted/50 transition-colors"

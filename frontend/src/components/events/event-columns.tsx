@@ -80,7 +80,9 @@ export const createEventColumns = ({ onView, onEdit, onDelete, onGeneratePDF }: 
     ),
     cell: ({ row }) => {
       const event = row.original
-      const date = new Date(event.event_date)
+      // Parse the date string and create a date object in local timezone
+      const [year, month, day] = event.event_date.split('-').map(Number)
+      const date = new Date(year, month - 1, day) // month is 0-indexed
       const formatTime = (timeString: string | undefined) => {
         if (!timeString) return '--:--'
         const [hours, minutes] = timeString.split(':')

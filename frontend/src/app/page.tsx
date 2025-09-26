@@ -469,7 +469,9 @@ export default function Dashboard() {
   }, [])
 
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString)
+    // Parse the date string and create a date object in local timezone
+    const [year, month, day] = dateString.split('-').map(Number)
+    const date = new Date(year, month - 1, day) // month is 0-indexed
     return date.toLocaleDateString('pt-BR', {
       weekday: 'long',
       year: 'numeric',
@@ -604,9 +606,7 @@ export default function Dashboard() {
                       date: selectedEvent.event_date,
                       startTime: selectedEvent.start_time,
                       endTime: selectedEvent.end_time,
-                      clientName: selectedEvent.client_name,
-                      clientPhone: selectedEvent.client_phone,
-                      clientEmail: selectedEvent.client_email || '',
+                      clientId: selectedEvent.client?.toString() || '',
                       guestCount: selectedEvent.guest_count.toString(),
                       venue: selectedEvent.venue_location || '',
                       value: selectedEvent.value?.toString() || '',

@@ -278,13 +278,21 @@ export function CustomEventsTable({
                         <div>
                           <div className="font-medium">{event.title}</div>
                           <div className="text-sm text-gray-500">
-                            {new Date(event.event_date).toLocaleDateString('pt-BR')}
+                            {(() => {
+                              const [year, month, day] = event.event_date.split('-').map(Number)
+                              const date = new Date(year, month - 1, day)
+                              return date.toLocaleDateString('pt-BR')
+                            })()}
                           </div>
                         </div>
                       </td>
                       <td className="p-3">{event.client_name}</td>
                       <td className="p-3">
-                        {new Date(event.event_date).toLocaleDateString('pt-BR')}
+                        {(() => {
+                          const [year, month, day] = event.event_date.split('-').map(Number)
+                          const date = new Date(year, month - 1, day)
+                          return date.toLocaleDateString('pt-BR')
+                        })()}
                       </td>
                       <td className="p-3">
                         <Badge className={getStatusColor(event.status)}>

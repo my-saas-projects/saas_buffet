@@ -193,11 +193,11 @@ export function EventDataTable({
           date: editingEvent.event_date,
           startTime: editingEvent.start_time,
           endTime: editingEvent.end_time,
-          clientId: '',
+          clientId: editingEvent.client?.toString() || '',
           guestCount: editingEvent.guest_count.toString(),
-          venue: '',
+          venue: editingEvent.venue_location || '',
           value: editingEvent.value?.toString() || '',
-          notes: '',
+          notes: editingEvent.notes || '',
           status: editingEvent.status,
           proposalValidityDate: editingEvent.proposal_validity_date || ''
         } : undefined}
