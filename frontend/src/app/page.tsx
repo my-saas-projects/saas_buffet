@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { CalendarDays, DollarSign, Users, AlertTriangle, Plus, Settings, ArrowLeft, Clock, MapPin, User, BarChart2, PieChart } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useAuth } from "@/hooks/use-auth"
-import { CustomEventsTable } from "@/components/events/custom-events-table"
+import { EventDataTable } from "@/components/events/event-data-table"
 import { EventForm } from "@/components/events/event-form"
 import { ClientDataTable } from "@/components/clients/client-data-table"
 import { ClientDetails } from "@/components/clients/client-details"
@@ -369,7 +369,7 @@ export default function Dashboard() {
                <Button size="sm" onClick={() => {
                  setActiveTab("events");
                  setSelectedEvent(null);
-                 setEditingEvent(true);
+                 setEditingEvent({} as any);
                }}>
                 <Plus className="h-4 w-4 mr-2" />
                 Novo Evento
@@ -628,7 +628,7 @@ export default function Dashboard() {
                 )
               ) : (
                 // Events List View
-                <CustomEventsTable
+                <EventDataTable
                   companyId={company.id}
                   onEventSelect={handleEventSelect}
                   editingEvent={editingEvent}

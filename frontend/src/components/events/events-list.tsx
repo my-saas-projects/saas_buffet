@@ -122,14 +122,14 @@ export function EventsList({ companyId, onEventSelect, onCreateNew }: EventsList
     return (
       <EventForm
         companyId={companyId}
-        eventId={editingEvent?.id}
+        eventId={editingEvent?.id?.toString()}
         initialData={editingEvent ? {
           eventType: editingEvent.event_type,
           title: editingEvent.title,
           date: editingEvent.event_date,
           startTime: editingEvent.start_time,
           endTime: editingEvent.end_time,
-          clientId: editingEvent.client?.toString() || '',
+          clientId: '',
           guestCount: editingEvent.guest_count.toString(),
           venue: editingEvent.venue_location || '',
           value: editingEvent.value?.toString() || '',

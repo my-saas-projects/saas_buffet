@@ -16,31 +16,6 @@ interface ColumnProps {
 
 export const createEventColumns = ({ onView, onEdit, onDelete }: ColumnProps): ColumnDef<EventListItem>[] => [
   {
-    accessorKey: "title",
-    header: ({ column }) => (
-      <Button
-        variant="ghost"
-        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        className="hover:bg-transparent p-0 font-medium"
-      >
-        Evento
-        <ArrowUpDown className="ml-2 h-4 w-4" />
-      </Button>
-    ),
-    cell: ({ row }) => {
-      const event = row.original
-      return (
-        <div className="space-y-1">
-          <div className="font-medium">{event.title}</div>
-          <div className="text-sm text-gray-500 flex items-center">
-            <CalendarDays className="h-3 w-3 mr-1" />
-            {new Date(event.event_date).toLocaleDateString('pt-BR')}
-          </div>
-        </div>
-      )
-    },
-  },
-  {
     accessorKey: "event_type",
     header: ({ column }) => (
       <Button
@@ -48,7 +23,7 @@ export const createEventColumns = ({ onView, onEdit, onDelete }: ColumnProps): C
         onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         className="hover:bg-transparent p-0 font-medium"
       >
-        Tipo
+        Tipo do Evento
         <ArrowUpDown className="ml-2 h-4 w-4" />
       </Button>
     ),
@@ -74,23 +49,21 @@ export const createEventColumns = ({ onView, onEdit, onDelete }: ColumnProps): C
     },
   },
   {
-    accessorKey: "client_name",
+    accessorKey: "title",
     header: ({ column }) => (
       <Button
         variant="ghost"
         onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         className="hover:bg-transparent p-0 font-medium"
       >
-        Cliente
+        Título do Evento
         <ArrowUpDown className="ml-2 h-4 w-4" />
       </Button>
     ),
-    cell: ({ row }) => (
-      <div className="flex items-center min-w-[150px]">
-        <User className="h-4 w-4 mr-2 text-gray-400" />
-        <span className="truncate">{row.getValue("client_name")}</span>
-      </div>
-    ),
+    cell: ({ row }) => {
+      const event = row.original
+      return <div className="font-medium">{event.title}</div>
+    },
   },
   {
     accessorKey: "event_date",
@@ -100,7 +73,7 @@ export const createEventColumns = ({ onView, onEdit, onDelete }: ColumnProps): C
         onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         className="hover:bg-transparent p-0 font-medium"
       >
-        Data & Hora
+        Data e Horário
         <ArrowUpDown className="ml-2 h-4 w-4" />
       </Button>
     ),
@@ -127,8 +100,27 @@ export const createEventColumns = ({ onView, onEdit, onDelete }: ColumnProps): C
     },
   },
   {
+    accessorKey: "client_name",
+    header: ({ column }) => (
+      <Button
+        variant="ghost"
+        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        className="hover:bg-transparent p-0 font-medium"
+      >
+        Cliente
+        <ArrowUpDown className="ml-2 h-4 w-4" />
+      </Button>
+    ),
+    cell: ({ row }) => (
+      <div className="flex items-center min-w-[150px]">
+        <User className="h-4 w-4 mr-2 text-gray-400" />
+        <span className="truncate">{row.getValue("client_name")}</span>
+      </div>
+    ),
+  },
+  {
     accessorKey: "guest_count",
-    header: "Convidados",
+    header: "Nº de Convidados",
     cell: ({ row }) => (
       <div className="flex items-center min-w-[100px]">
         <Users className="h-4 w-4 mr-2 text-gray-400" />
@@ -137,31 +129,13 @@ export const createEventColumns = ({ onView, onEdit, onDelete }: ColumnProps): C
     ),
   },
   {
-    accessorKey: "value",
-    header: ({ column }) => (
-      <Button
-        variant="ghost"
-        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        className="hover:bg-transparent p-0 font-medium"
-      >
-        Valor
-        <ArrowUpDown className="ml-2 h-4 w-4" />
-      </Button>
-    ),
+    accessorKey: "venue_location",
+    header: "Local",
     cell: ({ row }) => {
-      const value = row.original.value || row.original.final_price || row.original.estimated_cost
-      const formatCurrency = (val: number | undefined) => {
-        if (!val) return 'Não informado'
-        return new Intl.NumberFormat('pt-BR', {
-          style: 'currency',
-          currency: 'BRL'
-        }).format(val)
-      }
-
+      const location = row.getValue("venue_location") as string
       return (
-        <div className="flex items-center min-w-[120px]">
-          <DollarSign className="h-4 w-4 mr-1 text-gray-400" />
-          <span className="text-sm font-medium">{formatCurrency(value)}</span>
+        <div className="min-w-[120px] truncate">
+          {location || <span className="text-gray-400">Não informado</span>}
         </div>
       )
     },

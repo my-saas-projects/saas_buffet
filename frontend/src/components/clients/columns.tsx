@@ -65,6 +65,24 @@ export const createColumns = ({ onView, onEdit, onDelete }: ColumnProps): Column
     },
   },
   {
+    accessorKey: "phone",
+    header: ({ column }) => (
+      <Button
+        variant="ghost"
+        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        className="hover:bg-transparent p-0 font-medium"
+      >
+        Telefone
+        <ArrowUpDown className="ml-2 h-4 w-4" />
+      </Button>
+    ),
+    cell: ({ row }) => (
+      <div className="min-w-[120px]">
+        {row.getValue("phone")}
+      </div>
+    ),
+  },
+  {
     accessorKey: "email",
     header: ({ column }) => (
       <Button
@@ -81,49 +99,6 @@ export const createColumns = ({ onView, onEdit, onDelete }: ColumnProps): Column
         {row.getValue("email")}
       </div>
     ),
-  },
-  {
-    accessorKey: "phone",
-    header: "Telefone",
-    cell: ({ row }) => (
-      <div className="min-w-[120px]">
-        {row.getValue("phone")}
-      </div>
-    ),
-  },
-  {
-    accessorKey: "cpf",
-    header: "CPF/CNPJ",
-    cell: ({ row }) => {
-      const client = row.original
-      const document = client.client_type === 'JURIDICA' ? client.cnpj : client.cpf
-      return document ? <div className="min-w-[140px] font-mono text-sm">{document}</div> : <div className="text-gray-400">-</div>
-    },
-  },
-  {
-    accessorKey: "created_at",
-    header: ({ column }) => (
-      <Button
-        variant="ghost"
-        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        className="hover:bg-transparent p-0 font-medium"
-      >
-        Criado em
-        <ArrowUpDown className="ml-2 h-4 w-4" />
-      </Button>
-    ),
-    cell: ({ row }) => {
-      const date = new Date(row.getValue("created_at"))
-      return (
-        <div className="min-w-[100px]">
-          {date.toLocaleDateString('pt-BR', {
-            day: '2-digit',
-            month: '2-digit',
-            year: 'numeric'
-          })}
-        </div>
-      )
-    },
   },
   {
     id: "actions",

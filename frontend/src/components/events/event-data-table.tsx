@@ -161,7 +161,7 @@ export function EventDataTable({
     return (
       <EventForm
         companyId={companyId}
-        eventId={editingEvent?.id}
+        eventId={editingEvent?.id?.toString()}
         initialData={editingEvent ? {
           eventType: editingEvent.event_type,
           title: editingEvent.title,
@@ -263,11 +263,12 @@ export function EventDataTable({
                             column.toggleVisibility(!!value)
                           }
                         >
-                          {column.id === "event_type" ? "Tipo" :
+                          {column.id === "event_type" ? "Tipo do Evento" :
+                           column.id === "title" ? "Título do Evento" :
                            column.id === "client_name" ? "Cliente" :
-                           column.id === "event_date" ? "Data & Hora" :
-                           column.id === "guest_count" ? "Convidados" :
-                           column.id === "value" ? "Valor" :
+                           column.id === "event_date" ? "Data e Horário" :
+                           column.id === "guest_count" ? "Nº de Convidados" :
+                           column.id === "venue_location" ? "Local" :
                            column.id === "status" ? "Status" :
                            column.id}
                         </DropdownMenuCheckboxItem>
