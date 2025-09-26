@@ -68,7 +68,7 @@ export function EventDataTable({
   const [statusFilter, setStatusFilter] = useState<string>("all")
 
   // Load data
-  const loadEvents = async () => {
+  const loadEvents = useCallback(async () => {
     try {
       setIsLoading(true)
       setError(null)
@@ -81,11 +81,11 @@ export function EventDataTable({
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [])
 
   useEffect(() => {
     loadEvents()
-  }, [companyId])
+  }, [companyId, loadEvents])
 
   // Action handlers with useCallback to prevent re-renders
   const handleView = useCallback((event: EventListItem) => {
@@ -106,7 +106,7 @@ export function EventDataTable({
         alert('Erro ao excluir evento. Tente novamente.')
       }
     }
-  }, [])
+  }, [loadEvents])
 
   const handleGeneratePDF = useCallback(async (event: EventListItem) => {
     try {

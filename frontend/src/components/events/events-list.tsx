@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback, useMemo } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -38,12 +38,11 @@ export function EventsList({ companyId, onEventSelect, onCreateNew }: EventsList
   const [editingEvent, setEditingEvent] = useState<EventListItem | null>(null)
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState<string>("all")
+  const [eventTypeFilter, setEventTypeFilter] = useState<string>("all")
+  const [sortBy, setSortBy] = useState<string>("date")
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc")
 
-  useEffect(() => {
-    loadEvents()
-  }, [companyId])
-
-  const loadEvents = async () => {
+  const loadEvents = useCallback(async () => {
     try {
       setIsLoading(true)
       const response = await eventsAPI.list()
@@ -54,9 +53,13 @@ export function EventsList({ companyId, onEventSelect, onCreateNew }: EventsList
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [])
 
-  const getStatusColor = (status: EventStatus) => {
+  useEffect(() => {
+    loadEvents()
+  }, [companyId, loadEvents])
+
+  const getStatusColor = useCallback((status: EventStatus) => {
     // Mapeamento direto para cores com estilos mais específicos
     const colorMap: Record<string, string> = {
       'proposta_pendente': 'bg-yellow-500 text-white border-yellow-500',
@@ -69,13 +72,13 @@ export function EventsList({ companyId, onEventSelect, onCreateNew }: EventsList
     }
     
     return colorMap[status] || "bg-gray-100 text-gray-800"
-  }
+  }, [])
 
-  const getStatusText = (status: EventStatus) => {
+  const getStatusText = useCallback((status: EventStatus) => {
     return EVENT_STATUS_LABELS[status] || status
-  }
+  }, [])
 
-  const getEventTypeText = (eventType: string) => {
+  const getEventTypeText = useCallback((eventType: string) => {
     switch (eventType) {
       case "wedding": return "Casamento"
       case "graduation": return "Formatura"
@@ -85,38 +88,95 @@ export function EventsList({ companyId, onEventSelect, onCreateNew }: EventsList
       case "other": return "Outro"
       default: return eventType
     }
-  }
+  }, [])
 
-  const filteredEvents = events.filter(event => {
-    const matchesSearch = event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         event.client_name.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesStatus = statusFilter === "all" || event.status === statusFilter
-    
-    return matchesSearch && matchesStatus
-  })
+  const filteredAndSortedEvents = useMemo(() => {
+    let filtered = events.filter(event => {
+      const matchesSearch = event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           event.client_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           event.venue_location?.toLowerCase().includes(searchTerm.toLowerCase())
+      const matchesStatus = statusFilter === "all" || event.status === statusFilter
+      const matchesEventType = eventTypeFilter === "all" || event.event_type === eventTypeFilter
+      
+      return matchesSearch && matchesStatus && matchesEventType
+    })
 
-  const formatDate = (dateString: string) => {
+    // Sort events
+    filtered.sort((a, b) => {
+      let comparison = 0
+      
+      switch (sortBy) {
+        case "date":
+          comparison = new Date(a.event_date).getTime() - new Date(b.event_date).getTime()
+          break
+        case "title":
+          comparison = a.title.localeCompare(b.title)
+          break
+        case "client":
+          comparison = a.client_name.localeCompare(b.client_name)
+          break
+        case "value":
+          comparison = (a.value || 0) - (b.value || 0)
+          break
+        case "guests":
+          comparison = a.guest_count - b.guest_count
+          break
+        default:
+          comparison = 0
+      }
+      
+      return sortOrder === "asc" ? comparison : -comparison
+    })
+
+    return filtered
+  }, [events, searchTerm, statusFilter, eventTypeFilter, sortBy, sortOrder])
+
+  const formatDate = useCallback((dateString: string) => {
     const date = new Date(dateString)
     return date.toLocaleDateString('pt-BR', {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric'
     })
-  }
+  }, [])
 
-  const formatTime = (timeString: string | undefined) => {
+  const formatTime = useCallback((timeString: string | undefined) => {
     if (!timeString) return '--:--'
     const [hours, minutes] = timeString.split(':')
     return `${hours}:${minutes}`
-  }
+  }, [])
 
-  const formatCurrency = (value: number | undefined) => {
+  const formatCurrency = useCallback((value: number | undefined) => {
     if (!value) return 'Não informado'
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
       currency: 'BRL'
     }).format(value)
-  }
+  }, [])
+
+  // Event handlers
+  const handleCreateNew = useCallback(() => {
+    setShowForm(true)
+  }, [])
+
+  const handleEditEvent = useCallback((event: EventListItem) => {
+    setEditingEvent(event)
+  }, [])
+
+  const handleViewEvent = useCallback((event: EventListItem) => {
+    onEventSelect?.(event)
+  }, [onEventSelect])
+
+  const handleFormSuccess = useCallback(() => {
+    setShowForm(false)
+    setEditingEvent(null)
+    loadEvents()
+  }, [loadEvents])
+
+  const handleFormCancel = useCallback(() => {
+    setShowForm(false)
+    setEditingEvent(null)
+  }, [])
 
   if (showForm || editingEvent) {
     return (
@@ -137,15 +197,8 @@ export function EventsList({ companyId, onEventSelect, onCreateNew }: EventsList
           status: editingEvent.status,
           proposalValidityDate: editingEvent.proposal_validity_date || ''
         } : undefined}
-        onSuccess={() => {
-          setShowForm(false)
-          setEditingEvent(null)
-          loadEvents()
-        }}
-        onCancel={() => {
-          setShowForm(false)
-          setEditingEvent(null)
-        }}
+        onSuccess={handleFormSuccess}
+        onCancel={handleFormCancel}
       />
     )
   }
@@ -158,7 +211,7 @@ export function EventsList({ companyId, onEventSelect, onCreateNew }: EventsList
           <h2 className="text-2xl font-bold text-gray-900">Eventos</h2>
           <p className="text-gray-600">Gerencie todos os seus eventos</p>
         </div>
-        <Button onClick={() => setShowForm(true)}>
+        <Button onClick={handleCreateNew}>
           <Plus className="h-4 w-4 mr-2" />
           Novo Evento
         </Button>
@@ -167,32 +220,88 @@ export function EventsList({ companyId, onEventSelect, onCreateNew }: EventsList
       {/* Filtros */}
       <Card>
         <CardContent className="pt-6">
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                <Input
-                  placeholder="Buscar eventos ou clientes..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
+          <div className="space-y-4">
+            {/* Search Bar */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <Input
+                placeholder="Buscar eventos, clientes ou locais..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            
+            {/* Filters Row */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-1 block">Status</label>
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos Status</SelectItem>
+                    {EVENT_STATUS_OPTIONS.map(option => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-1 block">Tipo</label>
+                <Select value={eventTypeFilter} onValueChange={setEventTypeFilter}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Tipo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos Tipos</SelectItem>
+                    <SelectItem value="wedding">Casamento</SelectItem>
+                    <SelectItem value="graduation">Formatura</SelectItem>
+                    <SelectItem value="birthday">Aniversário</SelectItem>
+                    <SelectItem value="corporate">Corporativo</SelectItem>
+                    <SelectItem value="baptism">Batizado</SelectItem>
+                    <SelectItem value="other">Outro</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-1 block">Ordenar por</label>
+                <Select value={sortBy} onValueChange={setSortBy}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Ordenar" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="date">Data</SelectItem>
+                    <SelectItem value="title">Título</SelectItem>
+                    <SelectItem value="client">Cliente</SelectItem>
+                    <SelectItem value="value">Valor</SelectItem>
+                    <SelectItem value="guests">Convidados</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-1 block">Ordem</label>
+                <Select value={sortOrder} onValueChange={(value: "asc" | "desc") => setSortOrder(value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Ordem" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="asc">Crescente</SelectItem>
+                    <SelectItem value="desc">Decrescente</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
-            <div className="w-full md:w-48">
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos Status</SelectItem>
-                  {EVENT_STATUS_OPTIONS.map(option => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            
+            {/* Results Count */}
+            <div className="text-sm text-gray-600">
+              {filteredAndSortedEvents.length} evento(s) encontrado(s)
             </div>
           </div>
         </CardContent>
@@ -213,7 +322,7 @@ export function EventsList({ companyId, onEventSelect, onCreateNew }: EventsList
             </Card>
           ))}
         </div>
-      ) : filteredEvents.length === 0 ? (
+      ) : filteredAndSortedEvents.length === 0 ? (
         <Card>
           <CardContent className="text-center py-12">
             <CalendarDays className="h-12 w-12 text-gray-400 mx-auto mb-4" />
@@ -226,74 +335,80 @@ export function EventsList({ companyId, onEventSelect, onCreateNew }: EventsList
                 : "Comece cadastrando seu primeiro evento"
               }
             </p>
-            <Button onClick={() => setShowForm(true)}>
+            <Button onClick={handleCreateNew}>
               <Plus className="h-4 w-4 mr-2" />
               Criar Primeiro Evento
             </Button>
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-4">
-          {filteredEvents.map((event) => (
-            <Card key={event.id} className="hover:shadow-md transition-shadow">
+        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+          {filteredAndSortedEvents.map((event) => (
+            <Card key={event.id} className="hover:shadow-lg transition-all duration-200 hover:scale-[1.02]">
               <CardContent className="pt-6">
-                <div className="flex justify-between items-start">
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-3 mb-2">
-                      <h3 className="text-lg font-medium text-gray-900">{event.title}</h3>
+                <div className="space-y-4">
+                  {/* Header */}
+                  <div className="space-y-2">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h3 className="text-lg font-semibold text-gray-900 truncate flex-1 min-w-0">{event.title}</h3>
                       <span className={`inline-flex items-center justify-center rounded-md border px-2 py-0.5 text-xs font-medium ${getStatusColor(event.status)}`}>
                         {getStatusText(event.status)}
                       </span>
-                      <Badge variant="outline">
-                        {getEventTypeText(event.event_type)}
-                      </Badge>
                     </div>
+                    <Badge variant="outline" className="w-fit">
+                      {getEventTypeText(event.event_type)}
+                    </Badge>
+                  </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 text-sm text-gray-600">
-                      <div className="flex items-center space-x-2">
-                        <CalendarDays className="h-4 w-4" />
-                        <span>{formatDate(event.event_date)}</span>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Clock className="h-4 w-4" />
-                        <span>{formatTime(event.start_time)} - {formatTime(event.end_time)}</span>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Users className="h-4 w-4" />
-                        <span>{event.guest_count} convidados</span>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <User className="h-4 w-4" />
-                        <span>{event.client_name}</span>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <DollarSign className="h-4 w-4" />
-                        <span>{formatCurrency(event.value)}</span>
-                      </div>
+                  {/* Event Details */}
+                  <div className="space-y-3 text-sm text-gray-600">
+                    <div className="flex items-center space-x-2">
+                      <CalendarDays className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                      <span className="truncate">{formatDate(event.event_date)}</span>
                     </div>
-
+                    <div className="flex items-center space-x-2">
+                      <Clock className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                      <span className="truncate">{formatTime(event.start_time)} - {formatTime(event.end_time)}</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Users className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                      <span className="truncate">{event.guest_count} convidados</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <User className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                      <span className="truncate">{event.client_name}</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <DollarSign className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                      <span className="truncate">{formatCurrency(event.value)}</span>
+                    </div>
                     {event.venue_location && (
-                      <div className="flex items-center space-x-2 mt-2 text-sm text-gray-600">
-                        <MapPin className="h-4 w-4" />
-                        <span>{event.venue_location}</span>
+                      <div className="flex items-center space-x-2">
+                        <MapPin className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                        <span className="truncate">{event.venue_location}</span>
                       </div>
                     )}
                   </div>
 
-                  <div className="flex space-x-2">
+                  {/* Actions */}
+                  <div className="flex space-x-2 pt-2 border-t border-gray-100">
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => onEventSelect?.(event)}
+                      onClick={() => handleViewEvent(event)}
+                      className="flex-1"
                     >
-                      <Eye className="h-4 w-4" />
+                      <Eye className="h-4 w-4 mr-1" />
+                      Ver
                     </Button>
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => setEditingEvent(event)}
+                      onClick={() => handleEditEvent(event)}
+                      className="flex-1"
                     >
-                      <Edit className="h-4 w-4" />
+                      <Edit className="h-4 w-4 mr-1" />
+                      Editar
                     </Button>
                   </div>
                 </div>

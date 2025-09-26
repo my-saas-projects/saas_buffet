@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { CalendarDays, DollarSign, Users, AlertTriangle, Plus, Settings, ArrowLeft, Clock, MapPin, User, BarChart2, PieChart } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useAuth } from "@/hooks/use-auth"
-import { EventDataTable } from "@/components/events/event-data-table"
+import { EventsView } from "@/components/events/events-view"
 import { EventForm } from "@/components/events/event-form"
 import { ClientDataTable } from "@/components/clients/client-data-table"
 import { ClientDetails } from "@/components/clients/client-details"
@@ -792,13 +792,10 @@ export default function Dashboard() {
                 </div>
                 )
               ) : (
-                // Events List View
-                <EventDataTable
+                // Events View (Cards or Table)
+                <EventsView
                   companyId={company.id}
                   onEventSelect={handleEventSelect}
-                  editingEvent={editingEvent}
-                  onEditComplete={handleEventEditComplete}
-                  onEdit={handleEventEdit}
                 />
               )
             )}
