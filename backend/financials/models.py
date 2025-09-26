@@ -3,6 +3,29 @@ from django.conf import settings
 from users.models import Company
 from events.models import Event
 
+class FinancialTransaction(models.Model):
+    TRANSACTION_TYPE_CHOICES = [
+        ('INCOME', 'Entrada'),
+        ('EXPENSE', 'Saída'),
+    ]
+    STATUS_CHOICES = [
+        ('PENDING', 'Pendente'),
+        ('COMPLETED', 'Concluído'),
+        ('CANCELED', 'Cancelado'),
+    ]
+
+    description = models.CharField(max_length=255)
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    transaction_type = models.CharField(max_length=7, choices=TRANSACTION_TYPE_CHOICES)
+    transaction_date = models.DateField()
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='PENDING')
+    related_event = models.ForeignKey(Event, on_delete=models.SET_NULL, null=True, blank=True, related_name='financials')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.description} - {self.get_transaction_type_display()}"
+
 class CostCalculation(models.Model):
     event = models.OneToOneField(Event, on_delete=models.CASCADE, related_name='cost_calculation')
     calculated_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)

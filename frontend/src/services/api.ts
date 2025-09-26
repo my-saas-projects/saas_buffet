@@ -133,11 +133,35 @@ export const financialsAPI = {
   dashboard: () =>
     api.get('/financials/dashboard/'),
 
+  financialDashboard: () =>
+    api.get('/financials/financial-dashboard/'),
+
   eventCosts: (eventId: string) =>
     api.get(`/financials/event-costs/${eventId}/`),
 
   quotes: () =>
     api.get('/financials/quotes/'),
+
+  // Financial Transactions
+  transactions: {
+    list: () =>
+      api.get('/financials/transactions/'),
+
+    create: (transactionData: any) =>
+      api.post('/financials/transactions/', transactionData),
+
+    get: (id: string) =>
+      api.get(`/financials/transactions/${id}/`),
+
+    update: (id: string, transactionData: any) =>
+      api.put(`/financials/transactions/${id}/`, transactionData),
+
+    patch: (id: string, transactionData: any) =>
+      api.patch(`/financials/transactions/${id}/`, transactionData),
+
+    delete: (id: string) =>
+      api.delete(`/financials/transactions/${id}/`),
+  },
 };
 
 export const clientsAPI = {

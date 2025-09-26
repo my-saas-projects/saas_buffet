@@ -1,13 +1,16 @@
-from rest_framework import status, permissions
+from rest_framework import status, permissions, viewsets
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
+from rest_framework.views import APIView
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
-from django.db.models import Sum
+from django.db.models import Sum, Q
 from datetime import datetime, timedelta
+import datetime
 from events.models import Event
-from .models import CostCalculation, Quote, Notification, AuditLog
+from .models import FinancialTransaction, CostCalculation, Quote, Notification, AuditLog
 from .serializers import (
+    FinancialTransactionSerializer,
     CostCalculationSerializer,
     QuoteSerializer,
     QuoteListSerializer,
@@ -381,3 +384,64 @@ def financial_summary_view(request):
         'this_month_revenue': float(this_month_revenue),
         'average_order_value': float(average_order_value),
     })
+
+class FinancialTransactionViewSet(viewsets.ModelViewSet):
+    serializer_class = FinancialTransactionSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return FinancialTransaction.objects.all()
+
+class FinancialDashboardView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        # Métricas Principais
+        total_income = FinancialTransaction.objects.filter(
+            transaction_type='INCOME',
+            status='COMPLETED'
+        ).aggregate(total=Sum('amount'))['total'] or 0
+
+        total_expense = FinancialTransaction.objects.filter(
+            transaction_type='EXPENSE',
+            status='COMPLETED'
+        ).aggregate(total=Sum('amount'))['total'] or 0
+
+        accounts_receivable = FinancialTransaction.objects.filter(
+            transaction_type='INCOME',
+            status='PENDING'
+        ).aggregate(total=Sum('amount'))['total'] or 0
+
+        # Dados para o gráfico de fluxo de caixa (últimos 12 meses)
+        cash_flow_data = []
+        today = datetime.date.today()
+        for i in range(12, 0, -1):
+            month_date = today - datetime.timedelta(days=(i * 30))
+            month = month_date.strftime("%Y-%m")
+
+            income = FinancialTransaction.objects.filter(
+                transaction_type='INCOME',
+                status='COMPLETED',
+                transaction_date__year=month_date.year,
+                transaction_date__month=month_date.month
+            ).aggregate(total=Sum('amount'))['total'] or 0
+
+            expense = FinancialTransaction.objects.filter(
+                transaction_type='EXPENSE',
+                status='COMPLETED',
+                transaction_date__year=month_date.year,
+                transaction_date__month=month_date.month
+            ).aggregate(total=Sum('amount'))['total'] or 0
+
+            cash_flow_data.append({"month": month, "income": income, "expense": expense})
+
+        response_data = {
+            "kpis": {
+                "total_income": total_income,
+                "total_expense": total_expense,
+                "net_profit": total_income - total_expense,
+                "accounts_receivable": accounts_receivable,
+            },
+            "cash_flow_chart": cash_flow_data,
+        }
+        return Response(response_data)

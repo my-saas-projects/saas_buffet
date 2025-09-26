@@ -14,9 +14,13 @@ import { ClientDetails } from "@/components/clients/client-details"
 import { ClientForm } from "@/components/clients/client-form"
 import { EventCalendar } from "@/components/calendar/event-calendar"
 import { EVENT_STATUS_COLORS, EVENT_STATUS_LABELS } from "@/lib/constants"
-import { dashboardAPI } from "@/services/api"
+import { dashboardAPI, financialsAPI } from "@/services/api"
 import { EventStatusPieChart } from "@/components/charts/EventStatusPieChart"
 import { MonthlyRevenueBarChart } from "@/components/charts/MonthlyRevenueBarChart"
+import { KpiCard } from "@/components/financials/kpi-card"
+import { CashFlowChart } from "@/components/financials/cash-flow-chart"
+import { TransactionsDataTable } from "@/components/financials/transactions-data-table"
+import { TrendingUp, TrendingDown } from "lucide-react"
 
 // Helper function to format currency
 const formatCurrency = (value: number | undefined) => {
@@ -25,6 +29,129 @@ const formatCurrency = (value: number | undefined) => {
     style: 'currency',
     currency: 'BRL'
   }).format(value)
+}
+
+// Financial tab interfaces
+interface KpiData {
+  total_income: number
+  total_expense: number
+  net_profit: number
+  accounts_receivable: number
+}
+
+interface CashFlowData {
+  month: string
+  income: number
+  expense: number
+}
+
+// Financial Tab Component
+function FinancialTab() {
+  const [kpiData, setKpiData] = useState<KpiData>({
+    total_income: 0,
+    total_expense: 0,
+    net_profit: 0,
+    accounts_receivable: 0,
+  })
+  const [cashFlowData, setCashFlowData] = useState<CashFlowData[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [activeFinancialTab, setActiveFinancialTab] = useState("overview")
+
+  const loadFinancialData = async () => {
+    try {
+      setIsLoading(true)
+      setError(null)
+
+      const response = await financialsAPI.financialDashboard()
+      setKpiData(response.data.kpis)
+      setCashFlowData(response.data.cash_flow_chart)
+    } catch (error) {
+      console.error('Erro ao carregar dados financeiros:', error)
+      setError('Erro ao carregar dados financeiros')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    loadFinancialData()
+  }, [])
+
+  if (error) {
+    return (
+      <div className="min-h-[400px] flex items-center justify-center">
+        <Card className="w-full max-w-md">
+          <CardContent className="pt-6 text-center">
+            <p className="text-red-600 mb-4">{error}</p>
+            <Button variant="outline" onClick={loadFinancialData}>
+              Tentar novamente
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div>
+        <h2 className="text-2xl font-bold text-gray-900">Financeiro</h2>
+        <p className="text-gray-600">Visão geral da situação financeira da empresa</p>
+      </div>
+
+      {/* KPIs */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <KpiCard
+          title="Receita Total"
+          value={kpiData.total_income}
+          icon={TrendingUp}
+          trend="up"
+          isLoading={isLoading}
+        />
+        <KpiCard
+          title="Despesas Total"
+          value={kpiData.total_expense}
+          icon={TrendingDown}
+          trend="down"
+          isLoading={isLoading}
+        />
+        <KpiCard
+          title="Lucro Líquido"
+          value={kpiData.net_profit}
+          icon={DollarSign}
+          trend={kpiData.net_profit >= 0 ? "up" : "down"}
+          isLoading={isLoading}
+        />
+        <KpiCard
+          title="Contas a Receber"
+          value={kpiData.accounts_receivable}
+          icon={Clock}
+          trend="neutral"
+          isLoading={isLoading}
+        />
+      </div>
+
+      {/* Tabs for different views */}
+      <Tabs value={activeFinancialTab} onValueChange={setActiveFinancialTab} className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="overview">Visão Geral</TabsTrigger>
+          <TabsTrigger value="transactions">Transações</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="overview" className="space-y-6">
+          {/* Cash Flow Chart */}
+          <CashFlowChart data={cashFlowData} isLoading={isLoading} />
+        </TabsContent>
+
+        <TabsContent value="transactions" className="space-y-6">
+          {/* Transactions Table */}
+          <TransactionsDataTable />
+        </TabsContent>
+      </Tabs>
+    </div>
+  )
 }
 
 function OverviewTab() {
@@ -692,20 +819,7 @@ export default function Dashboard() {
           </TabsContent>
 
           <TabsContent value="financial" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Controle Financeiro</CardTitle>
-                <CardDescription>Em breve</CardDescription>
-              </CardHeader>
-              <CardContent>
-                 <div className="text-center py-12">
-                  <DollarSign className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">
-                    Módulo Financeiro em Desenvolvimento
-                  </h3>
-                </div>
-              </CardContent>
-            </Card>
+            <FinancialTab />
           </TabsContent>
 
           <TabsContent value="calendar" className="space-y-6">

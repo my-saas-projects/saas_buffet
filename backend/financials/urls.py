@@ -1,11 +1,19 @@
-from django.urls import path
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
 from . import views
 
 app_name = 'financials'
 
+router = DefaultRouter()
+router.register(r'transactions', views.FinancialTransactionViewSet, basename='transactions')
+
 urlpatterns = [
     # Dashboard
     path('dashboard/', views.dashboard_view, name='dashboard'),
+    path('financial-dashboard/', views.FinancialDashboardView.as_view(), name='financial_dashboard'),
+
+    # Financial transactions
+    path('', include(router.urls)),
 
     # Cost calculations
     path('cost-calculations/', views.cost_calculations_view, name='cost_calculations'),

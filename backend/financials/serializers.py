@@ -1,5 +1,14 @@
 from rest_framework import serializers
-from .models import CostCalculation, Quote, Notification, AuditLog
+from .models import FinancialTransaction, CostCalculation, Quote, Notification, AuditLog
+
+class FinancialTransactionSerializer(serializers.ModelSerializer):
+    transaction_type_display = serializers.CharField(source='get_transaction_type_display', read_only=True)
+    status_display = serializers.CharField(source='get_status_display', read_only=True)
+    related_event_title = serializers.CharField(source='related_event.title', read_only=True)
+
+    class Meta:
+        model = FinancialTransaction
+        fields = '__all__'
 
 class CostCalculationSerializer(serializers.ModelSerializer):
     total_cost = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
