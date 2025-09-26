@@ -20,6 +20,7 @@ import { MonthlyRevenueBarChart } from "@/components/charts/MonthlyRevenueBarCha
 import { KpiCard } from "@/components/financials/kpi-card"
 import { CashFlowChart } from "@/components/financials/cash-flow-chart"
 import { TransactionsDataTable } from "@/components/financials/transactions-data-table"
+import { NewTransactionDialog } from "@/components/financials/new-transaction-dialog"
 import { TrendingUp, TrendingDown } from "lucide-react"
 
 // Helper function to format currency
@@ -57,6 +58,8 @@ function FinancialTab() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [activeFinancialTab, setActiveFinancialTab] = useState("overview")
+  const [isNewTransactionDialogOpen, setIsNewTransactionDialogOpen] = useState(false)
+  const [refreshTrigger, setRefreshTrigger] = useState(0)
 
   const loadFinancialData = async () => {
     try {
@@ -71,6 +74,19 @@ function FinancialTab() {
       setError('Erro ao carregar dados financeiros')
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const handleTransactionCreate = async (transactionData: any) => {
+    try {
+      await financialsAPI.transactions.create(transactionData)
+      setIsNewTransactionDialogOpen(false)
+      // Trigger refresh of both dashboard and transactions table
+      setRefreshTrigger(prev => prev + 1)
+      await loadFinancialData()
+    } catch (error) {
+      console.error('Erro ao criar transação:', error)
+      throw error
     }
   }
 
@@ -146,8 +162,30 @@ function FinancialTab() {
         </TabsContent>
 
         <TabsContent value="transactions" className="space-y-6">
+          {/* Header with Add Transaction Button */}
+          <div className="flex justify-between items-center">
+            <div>
+              <h3 className="text-xl font-semibold text-gray-900">Transações Financeiras</h3>
+              <p className="text-gray-600">Gerencie entradas e saídas financeiras</p>
+            </div>
+            <Button
+              onClick={() => setIsNewTransactionDialogOpen(true)}
+              className="flex items-center gap-2"
+            >
+              <Plus className="h-4 w-4" />
+              Adicionar Nova Transação
+            </Button>
+          </div>
+
           {/* Transactions Table */}
-          <TransactionsDataTable />
+          <TransactionsDataTable refreshTrigger={refreshTrigger} />
+
+          {/* New Transaction Dialog */}
+          <NewTransactionDialog
+            open={isNewTransactionDialogOpen}
+            onOpenChange={setIsNewTransactionDialogOpen}
+            onSubmit={handleTransactionCreate}
+          />
         </TabsContent>
       </Tabs>
     </div>
