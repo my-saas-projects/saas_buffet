@@ -42,7 +42,11 @@ import { createColumns, FinancialTransaction } from "./columns"
 import { financialsAPI } from "@/services/api"
 import { toast } from "@/hooks/use-toast"
 
-export function TransactionsDataTable() {
+interface TransactionsDataTableProps {
+  refreshTrigger?: number
+}
+
+export function TransactionsDataTable({ refreshTrigger }: TransactionsDataTableProps) {
   const [data, setData] = useState<FinancialTransaction[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -77,6 +81,13 @@ export function TransactionsDataTable() {
   useEffect(() => {
     loadTransactions()
   }, [])
+
+  // Refresh when trigger changes
+  useEffect(() => {
+    if (refreshTrigger !== undefined && refreshTrigger > 0) {
+      loadTransactions()
+    }
+  }, [refreshTrigger])
 
   // Action handlers
   const handleEdit = useCallback((transaction: FinancialTransaction) => {
@@ -248,15 +259,6 @@ export function TransactionsDataTable() {
               </SelectContent>
             </Select>
 
-            <Button onClick={() => {
-              toast({
-                title: "Funcionalidade em desenvolvimento",
-                description: "A criação de transações será implementada em breve.",
-              })
-            }}>
-              <Plus className="h-4 w-4 mr-2" />
-              Nova Transação
-            </Button>
           </div>
 
           <div className="flex items-center space-x-2">
@@ -369,18 +371,7 @@ export function TransactionsDataTable() {
                         ) : (
                           <div>
                             <p className="text-gray-600 mb-2">Nenhuma transação cadastrada</p>
-                            <Button
-                              onClick={() => {
-                                toast({
-                                  title: "Funcionalidade em desenvolvimento",
-                                  description: "A criação de transações será implementada em breve.",
-                                })
-                              }}
-                              variant="outline"
-                            >
-                              <Plus className="h-4 w-4 mr-2" />
-                              Criar primeira transação
-                            </Button>
+                            <p className="text-sm text-gray-400">Use o botão "Adicionar Nova Transação" para começar</p>
                           </div>
                         )}
                       </TableCell>

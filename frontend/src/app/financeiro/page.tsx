@@ -3,10 +3,12 @@
 import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Button } from "@/components/ui/button"
 import { KpiCard } from "@/components/financials/kpi-card"
 import { CashFlowChart } from "@/components/financials/cash-flow-chart"
 import { TransactionsDataTable } from "@/components/financials/transactions-data-table"
-import { TrendingUp, TrendingDown, DollarSign, Clock } from "lucide-react"
+import { NewTransactionDialog } from "@/components/financials/new-transaction-dialog"
+import { TrendingUp, TrendingDown, DollarSign, Clock, Plus } from "lucide-react"
 import { financialsAPI } from "@/services/api"
 
 interface KpiData {
@@ -32,6 +34,8 @@ export default function FinanceiroPage() {
   const [cashFlowData, setCashFlowData] = useState<CashFlowData[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [isNewTransactionDialogOpen, setIsNewTransactionDialogOpen] = useState(false)
+  const [refreshTrigger, setRefreshTrigger] = useState(0)
 
   const loadFinancialData = async () => {
     try {
@@ -46,6 +50,19 @@ export default function FinanceiroPage() {
       setError('Erro ao carregar dados financeiros')
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const handleTransactionCreate = async (transactionData: any) => {
+    try {
+      await financialsAPI.transactions.create(transactionData)
+      setIsNewTransactionDialogOpen(false)
+      // Trigger refresh of both dashboard and transactions table
+      setRefreshTrigger(prev => prev + 1)
+      await loadFinancialData()
+    } catch (error) {
+      console.error('Erro ao criar transação:', error)
+      throw error
     }
   }
 
@@ -124,8 +141,30 @@ export default function FinanceiroPage() {
         </TabsContent>
 
         <TabsContent value="transactions" className="space-y-6">
+          {/* Header with Add Transaction Button */}
+          <div className="flex justify-between items-center">
+            <div>
+              <h2 className="text-xl font-semibold text-gray-900">Transações Financeiras</h2>
+              <p className="text-gray-600">Gerencie entradas e saídas financeiras</p>
+            </div>
+            <Button
+              onClick={() => setIsNewTransactionDialogOpen(true)}
+              className="flex items-center gap-2"
+            >
+              <Plus className="h-4 w-4" />
+              Adicionar Nova Transação
+            </Button>
+          </div>
+
           {/* Transactions Table */}
-          <TransactionsDataTable />
+          <TransactionsDataTable refreshTrigger={refreshTrigger} />
+
+          {/* New Transaction Dialog */}
+          <NewTransactionDialog
+            open={isNewTransactionDialogOpen}
+            onOpenChange={setIsNewTransactionDialogOpen}
+            onSubmit={handleTransactionCreate}
+          />
         </TabsContent>
       </Tabs>
     </div>
