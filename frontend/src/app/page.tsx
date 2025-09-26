@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useAuth } from "@/hooks/use-auth"
 import { EventsList } from "@/components/events/events-list"
 import { EventForm } from "@/components/events/event-form"
-import { ClientsList } from "@/components/clients/clients-list"
+import { ClientDataTable } from "@/components/clients/client-data-table"
 import { ClientDetails } from "@/components/clients/client-details"
 import { ClientForm } from "@/components/clients/client-form"
 import { EventCalendar } from "@/components/calendar/event-calendar"
@@ -664,7 +664,7 @@ export default function Dashboard() {
               )
             ) : (
               // Clients List View
-              <ClientsList
+              <ClientDataTable
                 onClientSelect={setSelectedClient}
                 onEdit={(client) => {
                   setEditingClient(client)
