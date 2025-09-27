@@ -287,6 +287,39 @@ def event_cost_calculation_view(request, event_id):
             return Response(CostCalculationSerializer(cost_calc).data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+@api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated])
+def calculate_cost_view(request, event_id):
+    """Calculate total cost for an event based on guests and menu items"""
+    event = get_object_or_404(Event, id=event_id, company=request.user.company)
+
+    guests = request.data.get('guests')
+    items = request.data.get('items', [])
+
+    if guests is None:
+        return Response({'error': 'guests field is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+    if not isinstance(guests, int) or guests <= 0:
+        return Response({'error': 'guests must be a positive integer'}, status=status.HTTP_400_BAD_REQUEST)
+
+    total_cost = 0
+
+    for item in items:
+        menu_item_id = item.get('menu_item_id')
+        quantity = item.get('quantity', 1)
+
+        if not menu_item_id:
+            return Response({'error': 'menu_item_id is required for each item'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            menu_item = MenuItem.objects.get(id=menu_item_id, company=request.user.company)
+            item_cost = menu_item.cost_per_person * guests * quantity
+            total_cost += item_cost
+        except MenuItem.DoesNotExist:
+            return Response({'error': f'Menu item with id {menu_item_id} not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    return Response({'estimated_cost': float(total_cost)})
+
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
 def generate_proposal_pdf_view(request, event_id):

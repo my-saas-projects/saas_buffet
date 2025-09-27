@@ -83,6 +83,9 @@ export const eventsAPI = {
       },
     }),
 
+  calculateCost: (eventId: string, data: { guests: number; items: { menu_item_id: number; quantity: number }[] }) =>
+    api.post(`/events/${eventId}/calculate-cost/`, data),
+
   generateProposalPDF: (eventId: string) =>
     api.get(`/events/${eventId}/generate-proposal-pdf/`, {
       responseType: 'blob',
@@ -119,19 +122,19 @@ export const usersAPI = {
 
 export const menuAPI = {
   list: () =>
-    api.get('/menu-items/'),
+    api.get('/events/menu-items/'),
 
   create: (menuData: any) =>
-    api.post('/menu-items/', menuData),
+    api.post('/events/menu-items/', menuData),
 
   get: (id: string) =>
-    api.get(`/menu-items/${id}/`),
+    api.get(`/events/menu-items/${id}/`),
 
   update: (id: string, menuData: any) =>
-    api.put(`/menu-items/${id}/`, menuData),
+    api.put(`/events/menu-items/${id}/`, menuData),
 
   delete: (id: string) =>
-    api.delete(`/menu-items/${id}/`),
+    api.delete(`/events/menu-items/${id}/`),
 };
 
 export const financialsAPI = {

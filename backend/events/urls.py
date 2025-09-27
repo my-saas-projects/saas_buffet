@@ -14,6 +14,7 @@ urlpatterns = [
 
     path('<int:event_id>/menu-items/', views.event_menu_items_view, name='event_menu_items'),
     path('<int:event_id>/cost-calculation/', views.event_cost_calculation_view, name='event_cost_calculation'),
+    path('<int:event_id>/calculate-cost/', views.calculate_cost_view, name='calculate_cost'),
     path('<int:event_id>/generate-proposal-pdf/', views.generate_proposal_pdf_view, name='generate_proposal_pdf'),
 
     path('<int:event_id>/menu/', views.add_menu_to_event_view, name='add_menu_to_event'),
