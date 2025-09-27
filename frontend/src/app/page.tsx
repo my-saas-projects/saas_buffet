@@ -313,35 +313,7 @@ function OverviewTab() {
         </Card>
       </div>
 
-      {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-        <div className="lg:col-span-3">
-          {monthlyRevenue.length > 0 ? (
-            <MonthlyRevenueBarChart data={monthlyRevenue} />
-          ) : (
-            <Card className="h-full flex items-center justify-center">
-              <div className="text-center text-gray-500">
-                <BarChart2 className="mx-auto h-8 w-8 mb-2" />
-                <p>Sem dados de faturamento para exibir.</p>
-              </div>
-            </Card>
-          )}
-        </div>
-        <div className="lg:col-span-2">
-          {statusDistribution.length > 0 ? (
-            <EventStatusPieChart data={statusDistribution} />
-          ) : (
-            <Card className="h-full flex items-center justify-center">
-              <div className="text-center text-gray-500">
-                <PieChart className="mx-auto h-8 w-8 mb-2" />
-                <p>Sem dados de status para exibir.</p>
-              </div>
-            </Card>
-          )}
-        </div>
-      </div>
-
-      {/* Upcoming Events & Alerts */}
+      {/* First Row: Próximos Eventos & Distribuição por Status */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
@@ -379,6 +351,35 @@ function OverviewTab() {
             </div>
           </CardContent>
         </Card>
+
+        <div>
+          {statusDistribution.length > 0 ? (
+            <EventStatusPieChart data={statusDistribution} />
+          ) : (
+            <Card className="h-full flex items-center justify-center">
+              <div className="text-center text-gray-500">
+                <PieChart className="mx-auto h-8 w-8 mb-2" />
+                <p>Sem dados de status para exibir.</p>
+              </div>
+            </Card>
+          )}
+        </div>
+      </div>
+
+      {/* Second Row: Faturamento Mensal & Alertas */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div>
+          {monthlyRevenue.length > 0 ? (
+            <MonthlyRevenueBarChart data={monthlyRevenue} />
+          ) : (
+            <Card className="h-full flex items-center justify-center">
+              <div className="text-center text-gray-500">
+                <BarChart2 className="mx-auto h-8 w-8 mb-2" />
+                <p>Sem dados de faturamento para exibir.</p>
+              </div>
+            </Card>
+          )}
+        </div>
 
         <Card>
           <CardHeader>
