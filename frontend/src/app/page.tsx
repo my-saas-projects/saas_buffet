@@ -9,6 +9,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useAuth } from "@/hooks/use-auth"
 import { EventsView } from "@/components/events/events-view"
 import { EventForm } from "@/components/events/event-form"
+import { EventCostCalculator } from "@/components/events/event-cost-calculator"
+import { MenuItemsList } from "@/components/menu/menu-items-list"
+import { MenuItemForm } from "@/components/menu/menu-item-form"
 import { ClientDataTable } from "@/components/clients/client-data-table"
 import { ClientDetails } from "@/components/clients/client-details"
 import { ClientForm } from "@/components/clients/client-form"
@@ -403,6 +406,8 @@ export default function Dashboard() {
   const [editingEvent, setEditingEvent] = useState<any>(null)
   const [selectedClient, setSelectedClient] = useState<any>(null)
   const [editingClient, setEditingClient] = useState<any>(null)
+  const [selectedMenuItem, setSelectedMenuItem] = useState<any>(null)
+  const [editingMenuItem, setEditingMenuItem] = useState<any>(null)
 
   useEffect(() => {
     if (user && !company && !authLoading) {
@@ -579,10 +584,11 @@ export default function Dashboard() {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="overview">Visão Geral</TabsTrigger>
             <TabsTrigger value="clients">Clientes</TabsTrigger>
-            <TabsTrigger value="events">Eventos</TabsTrigger>   
+            <TabsTrigger value="events">Eventos</TabsTrigger>
+            <TabsTrigger value="menu">Cardápio</TabsTrigger>
             <TabsTrigger value="calendar">Agenda</TabsTrigger>
             <TabsTrigger value="financial">Financeiro</TabsTrigger>
           </TabsList>
@@ -739,6 +745,15 @@ export default function Dashboard() {
                     </CardContent>
                   </Card>
 
+                  {/* Calculadora de Custos */}
+                  <EventCostCalculator
+                    eventId={selectedEvent.id.toString()}
+                    initialGuests={selectedEvent.guest_count}
+                    onCostCalculated={(cost) => {
+                      console.log('Custo calculado:', cost)
+                    }}
+                  />
+
                   {/* Observações */}
                   {selectedEvent.notes && (
                     <Card>
@@ -882,6 +897,49 @@ export default function Dashboard() {
                   setEditingClient(client)
                   setSelectedClient(client)
                 }}
+              />
+            )}
+          </TabsContent>
+
+          {/* Cardápio */}
+          <TabsContent value="menu" className="space-y-6">
+            {editingMenuItem ? (
+              // Menu Item Form (Edit/Create Mode)
+              <div className="space-y-6">
+                <div className="flex items-center">
+                  <Button variant="ghost" onClick={() => { setEditingMenuItem(null); setSelectedMenuItem(null); }} className="mr-4">
+                    <ArrowLeft className="h-4 w-4" />
+                  </Button>
+                  <h2 className="text-2xl font-bold text-gray-900">
+                    {editingMenuItem.id ? "Editar Item do Cardápio" : "Novo Item do Cardápio"}
+                  </h2>
+                </div>
+                <MenuItemForm
+                  itemId={editingMenuItem.id}
+                  initialData={editingMenuItem.id ? {
+                    name: editingMenuItem.name,
+                    category: editingMenuItem.category,
+                    description: editingMenuItem.description || '',
+                    cost_per_person: editingMenuItem.cost_per_person?.toString() || '',
+                    price_per_person: editingMenuItem.price_per_person?.toString() || '',
+                    is_active: editingMenuItem.is_active ?? true,
+                    seasonal: editingMenuItem.seasonal ?? false,
+                  } : undefined}
+                  onSuccess={() => {
+                    setEditingMenuItem(null)
+                    setSelectedMenuItem(null)
+                  }}
+                  onCancel={() => {
+                    setEditingMenuItem(null)
+                    setSelectedMenuItem(null)
+                  }}
+                />
+              </div>
+            ) : (
+              // Menu Items List View
+              <MenuItemsList
+                onAddNew={() => setEditingMenuItem({})}
+                onEdit={(item) => setEditingMenuItem(item)}
               />
             )}
           </TabsContent>
