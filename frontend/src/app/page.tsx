@@ -602,8 +602,7 @@ export default function Dashboard() {
             setEditingEvent({} as any);
           }}
           onSettings={() => {
-            // Handle settings
-            console.log("Settings clicked");
+            window.location.href = "/settings";
           }}
           onLogout={logout}
         />

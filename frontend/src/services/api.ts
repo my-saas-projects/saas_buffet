@@ -113,6 +113,25 @@ export const companiesAPI = {
 
   update: (id: string, companyData: any) =>
     api.put(`/companies/${id}/`, companyData),
+
+  // Settings specific endpoints
+  myCompany: () =>
+    api.get('/companies/my-company/'),
+
+  updateMyCompany: (companyData: any) =>
+    api.patch('/companies/my-company/', companyData),
+
+  paymentMethods: () =>
+    api.get('/companies/payment-methods/'),
+
+  createPaymentMethod: (data: { card_holder_name: string }) =>
+    api.post('/companies/payment-methods/', data),
+
+  updatePaymentMethod: (id: number, data: any) =>
+    api.patch(`/companies/payment-methods/${id}/`, data),
+
+  deletePaymentMethod: (id: number) =>
+    api.delete(`/companies/payment-methods/${id}/`),
 };
 
 export const usersAPI = {
