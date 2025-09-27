@@ -19,7 +19,9 @@ import {
   Eye,
   Trash2,
   DollarSign,
-  FileText
+  FileText,
+  Grid3X3,
+  Table
 } from "lucide-react"
 import { EventForm } from "./event-form"
 import { eventsAPI } from "@/services/api"
@@ -30,9 +32,11 @@ interface EventsListProps {
   companyId: string
   onEventSelect?: (event: EventListItem) => void
   onCreateNew?: () => void
+  viewMode?: "cards" | "table"
+  onViewModeChange?: (mode: "cards" | "table") => void
 }
 
-export function EventsList({ companyId, onEventSelect, onCreateNew }: EventsListProps) {
+export function EventsList({ companyId, onEventSelect, onCreateNew, viewMode, onViewModeChange }: EventsListProps) {
   const [events, setEvents] = useState<EventListItem[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
@@ -238,13 +242,36 @@ export function EventsList({ companyId, onEventSelect, onCreateNew }: EventsList
           <h2 className="text-2xl font-bold text-gray-900">Eventos</h2>
           <p className="text-gray-600">Gerencie todos os seus eventos</p>
         </div>
-        <Button
-          onClick={handleCreateNew}
-          className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg font-medium"
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Novo Evento
-        </Button>
+        <div className="flex items-center space-x-3">
+          {/* View Toggle Buttons */}
+          {onViewModeChange && (
+            <div className="flex items-center space-x-2">
+              <Button
+                variant={viewMode === "cards" ? "default" : "outline"}
+                size="sm"
+                onClick={() => onViewModeChange("cards")}
+              >
+                <Grid3X3 className="h-4 w-4 mr-2" />
+                Cards
+              </Button>
+              <Button
+                variant={viewMode === "table" ? "default" : "outline"}
+                size="sm"
+                onClick={() => onViewModeChange("table")}
+              >
+                <Table className="h-4 w-4 mr-2" />
+                Tabela
+              </Button>
+            </div>
+          )}
+          <Button
+            onClick={handleCreateNew}
+            className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg font-medium"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Novo Evento
+          </Button>
+        </div>
       </div>
 
       {/* Filtros */}
