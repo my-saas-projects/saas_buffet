@@ -197,11 +197,19 @@ export function MenuItemForm({ itemId, initialData, onSuccess, onCancel }: MenuI
 
           {/* Botões */}
           <div className="flex space-x-3 pt-6">
-            <Button type="submit" disabled={isLoading} className="flex-1">
+            <Button
+              type="submit"
+              disabled={isLoading}
+              className="flex-1 bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg font-medium disabled:opacity-50"
+            >
               {isLoading ? "Salvando..." : itemId ? "Atualizar Item" : "Criar Item"}
             </Button>
             {onCancel && (
-              <Button type="button" variant="outline" onClick={onCancel}>
+              <Button
+                type="button"
+                onClick={onCancel}
+                className="border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 px-4 py-2 rounded-lg font-medium text-gray-700 dark:text-gray-300"
+              >
                 Cancelar
               </Button>
             )}

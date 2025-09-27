@@ -238,7 +238,10 @@ export function ClientDataTable({
           {error ? (
             <div className="text-center py-12">
               <p className="text-red-600">{error}</p>
-              <Button variant="outline" onClick={loadClients} className="mt-4">
+              <Button
+                onClick={loadClients}
+                className="mt-4 bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg font-medium"
+              >
                 Tentar novamente
               </Button>
             </div>
@@ -307,7 +310,10 @@ export function ClientDataTable({
                           ) : (
                             <div>
                               <p className="text-gray-600 mb-2">Nenhum cliente cadastrado</p>
-                              <Button onClick={() => setShowForm(true)} variant="outline">
+                              <Button
+                                onClick={() => setShowForm(true)}
+                                className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg font-medium"
+                              >
                                 <Plus className="h-4 w-4 mr-2" />
                                 Criar primeiro cliente
                               </Button>

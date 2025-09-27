@@ -484,7 +484,7 @@ export function ClientForm({ clientId, onSuccess, onCancel, initialData }: Clien
               {onCancel && (
                 <Button
                   type="button"
-                  variant="outline"
+                  className="border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 px-4 py-2 rounded-lg font-medium text-gray-700 dark:text-gray-300"
                   onClick={onCancel}
                   disabled={isLoading}
                 >
@@ -494,6 +494,7 @@ export function ClientForm({ clientId, onSuccess, onCancel, initialData }: Clien
               <Button
                 type="submit"
                 disabled={isLoading}
+                className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg font-medium disabled:opacity-50"
               >
                 {isLoading
                   ? "Salvando..."

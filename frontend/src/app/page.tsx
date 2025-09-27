@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { CalendarDays, DollarSign, Users, AlertTriangle, Plus, Settings, ArrowLeft, Clock, MapPin, User, BarChart2, PieChart, FileText, Edit, Trash2 } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { SideNav } from "@/components/layout/SideNav"
+import { Header } from "@/components/layout/Header"
 import { useAuth } from "@/hooks/use-auth"
 import { EventsView } from "@/components/events/events-view"
 import { EventForm } from "@/components/events/event-form"
@@ -103,7 +105,10 @@ function FinancialTab() {
         <Card className="w-full max-w-md">
           <CardContent className="pt-6 text-center">
             <p className="text-red-600 mb-4">{error}</p>
-            <Button variant="outline" onClick={loadFinancialData}>
+            <Button
+              onClick={loadFinancialData}
+              className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg font-medium"
+            >
               Tentar novamente
             </Button>
           </CardContent>
@@ -152,28 +157,57 @@ function FinancialTab() {
         />
       </div>
 
-      {/* Tabs for different views */}
-      <Tabs value={activeFinancialTab} onValueChange={setActiveFinancialTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="overview">Visão Geral</TabsTrigger>
-          <TabsTrigger value="transactions">Transações</TabsTrigger>
-        </TabsList>
+      {/* Navigation Tabs */}
+      <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 p-1 mb-6">
+        <div className="flex space-x-1">
+          <Button
+            variant={activeFinancialTab === "overview" ? "default" : "ghost"}
+            size="sm"
+            onClick={() => setActiveFinancialTab("overview")}
+            className={`px-4 py-2 rounded-md transition-all ${
+              activeFinancialTab === "overview"
+                ? "bg-orange-600 hover:bg-orange-700 text-white"
+                : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+            }`}
+          >
+            <BarChart2 className="h-4 w-4 mr-2" />
+            Visão Geral
+          </Button>
+          <Button
+            variant={activeFinancialTab === "transactions" ? "default" : "ghost"}
+            size="sm"
+            onClick={() => setActiveFinancialTab("transactions")}
+            className={`px-4 py-2 rounded-md transition-all ${
+              activeFinancialTab === "transactions"
+                ? "bg-orange-600 hover:bg-orange-700 text-white"
+                : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+            }`}
+          >
+            <DollarSign className="h-4 w-4 mr-2" />
+            Transações
+          </Button>
+        </div>
+      </div>
 
-        <TabsContent value="overview" className="space-y-6">
+      {/* Content based on active tab */}
+      {activeFinancialTab === "overview" && (
+        <div className="space-y-6">
           {/* Cash Flow Chart */}
           <CashFlowChart data={cashFlowData} isLoading={isLoading} />
-        </TabsContent>
+        </div>
+      )}
 
-        <TabsContent value="transactions" className="space-y-6">
+      {activeFinancialTab === "transactions" && (
+        <div className="space-y-6">
           {/* Header with Add Transaction Button */}
           <div className="flex justify-between items-center">
             <div>
-              <h3 className="text-xl font-semibold text-gray-900">Transações Financeiras</h3>
-              <p className="text-gray-600">Gerencie entradas e saídas financeiras</p>
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Transações Financeiras</h3>
+              <p className="text-gray-600 dark:text-gray-400">Gerencie entradas e saídas financeiras</p>
             </div>
             <Button
               onClick={() => setIsNewTransactionDialogOpen(true)}
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 bg-orange-600 hover:bg-orange-700 text-white"
             >
               <Plus className="h-4 w-4" />
               Adicionar Nova Transação
@@ -189,8 +223,8 @@ function FinancialTab() {
             onOpenChange={setIsNewTransactionDialogOpen}
             onSubmit={handleTransactionCreate}
           />
-        </TabsContent>
-      </Tabs>
+        </div>
+      )}
     </div>
   )
 }
@@ -550,56 +584,37 @@ export default function Dashboard() {
   
   // Main application view for authenticated users
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <div className="flex items-center">
-              <h1 className="text-2xl font-bold text-gray-900">BuffetFlow</h1>
-              {company && (
-                <span className="ml-3 text-sm text-gray-600">
-                  {company.name}
-                </span>
-              )}
-            </div>
-            <div className="flex items-center space-x-4">
-               <Button size="sm" onClick={() => {
-                 setActiveTab("events");
-                 setSelectedEvent(null);
-                 setEditingEvent({} as any);
-               }}>
-                <Plus className="h-4 w-4 mr-2" />
-                Novo Evento
-              </Button>
-              <Button variant="outline" size="sm">
-                <Settings className="h-4 w-4 mr-2" />
-                Configurações
-              </Button>
-              <Button variant="ghost" size="sm" onClick={logout}>
-                Sair
-              </Button>
-            </div>
-          </div>
-        </div>
-      </header>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex">
+      {/* Sidebar Navigation */}
+      <SideNav
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        companyName={company?.name}
+      />
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-6">
-            <TabsTrigger value="overview">Visão Geral</TabsTrigger>
-            <TabsTrigger value="clients">Clientes</TabsTrigger>
-            <TabsTrigger value="events">Eventos</TabsTrigger>
-            <TabsTrigger value="menu">Cardápio</TabsTrigger>
-            <TabsTrigger value="calendar">Agenda</TabsTrigger>
-            <TabsTrigger value="financial">Financeiro</TabsTrigger>
-          </TabsList>
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col min-h-screen">
+        {/* Header */}
+        <Header
+          onNewEvent={() => {
+            setActiveTab("events");
+            setSelectedEvent(null);
+            setEditingEvent({} as any);
+          }}
+          onSettings={() => {
+            // Handle settings
+            console.log("Settings clicked");
+          }}
+          onLogout={logout}
+        />
 
-          <TabsContent value="overview">
-            <OverviewTab />
-          </TabsContent>
+        {/* Main Content */}
+        <main className="flex-1 px-8 py-6 overflow-auto bg-gray-50 dark:bg-gray-950">
+          <div className="max-w-7xl mx-auto">
+            {activeTab === "overview" && <OverviewTab />}
 
-          {/* Eventos */}
-          <TabsContent value="events" className="space-y-6">
+            {activeTab === "events" && (
+              <div className="space-y-6">
             {company && (
               selectedEvent ? (
                 editingEvent ? (
@@ -633,7 +648,10 @@ export default function Dashboard() {
                   // Event Details View
                   <div className="space-y-6">
                   <div className="flex items-center">
-                    <Button variant="ghost" onClick={() => { setSelectedEvent(null); setEditingEvent(false); }} className="mr-4">
+                    <Button
+                      onClick={() => { setSelectedEvent(null); setEditingEvent(false); }}
+                      className="mr-4 border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 px-3 py-2 rounded-lg text-gray-700 dark:text-gray-300"
+                    >
                       <ArrowLeft className="h-4 w-4" />
                     </Button>
                     <h2 className="text-2xl font-bold text-gray-900">Detalhes do Evento</h2>
@@ -776,41 +794,41 @@ export default function Dashboard() {
                           <h4 className="font-medium text-gray-900 mb-3">Alterar Status</h4>
                           <div className="flex flex-wrap gap-2">
                             {selectedEvent.status === 'proposta_pendente' && (
-                              <Button size="sm" variant="outline" className="bg-blue-50 hover:bg-blue-100">
+                              <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-md font-medium">
                                 Enviar Proposta
                               </Button>
                             )}
                             {selectedEvent.status === 'proposta_enviada' && (
                               <>
-                                <Button size="sm" variant="outline" className="bg-green-50 hover:bg-green-100">
+                                <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-md font-medium">
                                   Aceitar Proposta
                                 </Button>
-                                <Button size="sm" variant="outline" className="bg-red-50 hover:bg-red-100">
+                                <Button size="sm" className="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-md font-medium">
                                   Recusar Proposta
                                 </Button>
                               </>
                             )}
                             {selectedEvent.status === 'proposta_aceita' && (
-                              <Button size="sm" variant="outline" className="bg-purple-50 hover:bg-purple-100">
+                              <Button size="sm" className="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-md font-medium">
                                 Iniciar Evento
                               </Button>
                             )}
                             {selectedEvent.status === 'em_execucao' && (
-                              <Button size="sm" variant="outline" className="bg-indigo-50 hover:bg-indigo-100">
+                              <Button size="sm" className="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-md font-medium">
                                 Finalizar Evento
                               </Button>
                             )}
                             {selectedEvent.status === 'pos_evento' && (
-                              <Button size="sm" variant="outline" className="bg-gray-50 hover:bg-gray-100">
+                              <Button size="sm" className="bg-gray-600 hover:bg-gray-700 text-white px-3 py-2 rounded-md font-medium">
                                 Concluir Evento
                               </Button>
                             )}
                             {selectedEvent.status === 'proposta_recusada' && (
                               <>
-                                <Button size="sm" variant="outline" className="bg-blue-50 hover:bg-blue-100">
+                                <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-md font-medium">
                                   Nova Proposta
                                 </Button>
-                                <Button size="sm" variant="outline" className="bg-gray-50 hover:bg-gray-100">
+                                <Button size="sm" className="bg-gray-600 hover:bg-gray-700 text-white px-3 py-2 rounded-md font-medium">
                                   Concluir
                                 </Button>
                               </>
@@ -821,15 +839,21 @@ export default function Dashboard() {
                         {/* Ações Gerais */}
                         <div className="border-t pt-4">
                           <div className="flex space-x-3">
-                            <Button variant="outline" onClick={() => setEditingEvent(true)}>
+                            <Button
+                              onClick={() => setEditingEvent(true)}
+                              className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg font-medium mr-3"
+                            >
                               <Edit className="h-4 w-4 mr-2" />
                               Editar Evento
                             </Button>
-                            <Button variant="outline" onClick={() => handleGeneratePDF(selectedEvent)}>
+                            <Button
+                              onClick={() => handleGeneratePDF(selectedEvent)}
+                              className="border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 px-4 py-2 rounded-lg font-medium mr-3 text-gray-700 dark:text-gray-300"
+                            >
                               <FileText className="h-4 w-4 mr-2" />
                               Gerar Orçamento PDF
                             </Button>
-                            <Button variant="destructive">
+                            <Button className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium">
                               <Trash2 className="h-4 w-4 mr-2" />
                               Excluir Evento
                             </Button>
@@ -848,10 +872,11 @@ export default function Dashboard() {
                 />
               )
             )}
-          </TabsContent>
+              </div>
+            )}
 
-          {/* Clientes */}
-          <TabsContent value="clients" className="space-y-6">
+            {activeTab === "clients" && (
+              <div className="space-y-6">
             {selectedClient ? (
               editingClient ? (
                 // Client Form (Edit Mode)
@@ -900,15 +925,19 @@ export default function Dashboard() {
                 }}
               />
             )}
-          </TabsContent>
+              </div>
+            )}
 
-          {/* Cardápio */}
-          <TabsContent value="menu" className="space-y-6">
+            {activeTab === "menu" && (
+              <div className="space-y-6">
             {editingMenuItem ? (
               // Menu Item Form (Edit/Create Mode)
               <div className="space-y-6">
                 <div className="flex items-center">
-                  <Button variant="ghost" onClick={() => { setEditingMenuItem(null); setSelectedMenuItem(null); }} className="mr-4">
+                  <Button
+                    onClick={() => { setEditingMenuItem(null); setSelectedMenuItem(null); }}
+                    className="mr-4 border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 px-3 py-2 rounded-lg text-gray-700 dark:text-gray-300"
+                  >
                     <ArrowLeft className="h-4 w-4" />
                   </Button>
                   <h2 className="text-2xl font-bold text-gray-900">
@@ -943,13 +972,17 @@ export default function Dashboard() {
                 onEdit={(item) => setEditingMenuItem(item)}
               />
             )}
-          </TabsContent>
+              </div>
+            )}
 
-          <TabsContent value="financial" className="space-y-6">
-            <FinancialTab />
-          </TabsContent>
+            {activeTab === "financial" && (
+              <div className="space-y-6">
+                <FinancialTab />
+              </div>
+            )}
 
-          <TabsContent value="calendar" className="space-y-6">
+            {activeTab === "calendar" && (
+              <div className="space-y-6">
             <div>
               <div className="mb-6">
                 <h2 className="text-2xl font-bold text-gray-900 mb-2">
@@ -975,9 +1008,11 @@ export default function Dashboard() {
                 }}
               />
             </div>
-          </TabsContent>
-        </Tabs>
-      </main>
+              </div>
+            )}
+          </div>
+        </main>
+      </div>
     </div>
   )
 }
