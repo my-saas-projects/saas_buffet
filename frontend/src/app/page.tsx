@@ -584,7 +584,7 @@ export default function Dashboard() {
   
   // Main application view for authenticated users
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex lg:flex-row">
       {/* Sidebar Navigation */}
       <SideNav
         activeTab={activeTab}
