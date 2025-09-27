@@ -170,7 +170,10 @@ export function ClientDataTable({
           <h2 className="text-2xl font-bold text-gray-900">Clientes</h2>
           <p className="text-gray-600">Gerencie seus clientes</p>
         </div>
-        <Button onClick={() => setShowForm(true)}>
+        <Button
+          onClick={() => setShowForm(true)}
+          className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg font-medium"
+        >
           <Plus className="h-4 w-4 mr-2" />
           Novo Cliente
         </Button>

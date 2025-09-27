@@ -141,7 +141,10 @@ export function MenuItemsList({ onAddNew, onEdit }: MenuItemsListProps) {
           <h2 className="text-2xl font-bold text-gray-900">Cardápio</h2>
           <p className="text-gray-600">Gerencie os itens do seu cardápio</p>
         </div>
-        <Button onClick={onAddNew} className="flex items-center gap-2">
+        <Button
+          onClick={onAddNew}
+          className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2"
+        >
           <Plus className="h-4 w-4" />
           Adicionar Item
         </Button>
