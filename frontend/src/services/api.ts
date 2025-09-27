@@ -90,6 +90,15 @@ export const eventsAPI = {
     api.get(`/events/${eventId}/generate-proposal-pdf/`, {
       responseType: 'blob',
     }),
+
+  getEventMenuItems: (eventId: string) =>
+    api.get(`/events/${eventId}/menu-items/`),
+
+  addEventMenuItem: (eventId: string, data: { menu_item: number; quantity: number }) =>
+    api.post(`/events/${eventId}/menu-items/`, data),
+
+  removeEventMenuItem: (eventId: string, menuItemId: number) =>
+    api.delete(`/events/${eventId}/menu/${menuItemId}/`),
 };
 
 export const companiesAPI = {

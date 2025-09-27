@@ -149,7 +149,7 @@ def calendar_view(request):
 @permission_classes([permissions.IsAuthenticated])
 def menu_items_view(request):
     if request.method == 'GET':
-        menu_items = MenuItem.objects.filter(company=request.user.company, is_active=True)
+        menu_items = MenuItem.objects.filter(company=request.user.company)
         
         category = request.GET.get('category')
         if category:
@@ -159,14 +159,18 @@ def menu_items_view(request):
         return Response(serializer.data)
     
     elif request.method == 'POST':
-        if not request.user.company:
-            return Response({'error': 'No company associated'}, status=status.HTTP_400_BAD_REQUEST)
-        
-        serializer = MenuItemSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save(company=request.user.company)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            if not hasattr(request.user, 'company') or not request.user.company:
+                return Response({'error': 'No company associated'}, status=status.HTTP_400_BAD_REQUEST)
+
+            serializer = MenuItemSerializer(data=request.data)
+            if serializer.is_valid():
+                serializer.save(company=request.user.company)
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            print(f"Error creating menu item: {str(e)}")
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['GET', 'PUT', 'DELETE'])
 @permission_classes([permissions.IsAuthenticated])

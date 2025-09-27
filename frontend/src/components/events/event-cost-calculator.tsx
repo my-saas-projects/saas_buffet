@@ -56,6 +56,7 @@ export function EventCostCalculator({ eventId, initialGuests = 1, onCostCalculat
 
   useEffect(() => {
     loadMenuItems()
+    loadEventMenuItems()
   }, [])
 
   useEffect(() => {
@@ -82,6 +83,49 @@ export function EventCostCalculator({ eventId, initialGuests = 1, onCostCalculat
       })
     } finally {
       setIsLoadingMenuItems(false)
+    }
+  }
+
+  const loadEventMenuItems = async () => {
+    try {
+      const response = await eventsAPI.getEventMenuItems(eventId)
+      const eventMenuItems = response.data
+        .filter((eventMenu: any) => eventMenu.menu_item_data && eventMenu.menu_item_data.id)
+        .map((eventMenu: any) => ({
+          menu_item_id: Number(eventMenu.menu_item_data.id),
+          quantity: Number(eventMenu.quantity) || 1,
+          menu_item: {
+            ...eventMenu.menu_item_data,
+            id: Number(eventMenu.menu_item_data.id),
+            cost_per_person: Number(eventMenu.menu_item_data.cost_per_person) || 0,
+            price_per_person: Number(eventMenu.menu_item_data.price_per_person) || 0
+          }
+        }))
+
+      // Remove duplicatas por menu_item_id
+      const uniqueItems = eventMenuItems.filter((item: any, index: number, self: any[]) =>
+        index === self.findIndex((t: any) => t.menu_item_id === item.menu_item_id)
+      )
+
+      setSelectedItems(uniqueItems)
+    } catch (error) {
+      console.error('Erro ao carregar itens do evento:', error)
+    }
+  }
+
+  const saveEventMenuItem = async (menuItemId: number, quantity: number) => {
+    try {
+      await eventsAPI.addEventMenuItem(eventId, {
+        menu_item: menuItemId,
+        quantity: quantity
+      })
+    } catch (error) {
+      console.error('Erro ao salvar item do evento:', error)
+      toast({
+        title: "Erro ao salvar",
+        description: "Não foi possível salvar o item no evento.",
+        variant: "destructive",
+      })
     }
   }
 
@@ -118,17 +162,21 @@ export function EventCostCalculator({ eventId, initialGuests = 1, onCostCalculat
     }
   }
 
-  const addMenuItem = (menuItemId: string) => {
+  const addMenuItem = async (menuItemId: string) => {
     const menuItem = menuItems.find(item => item.id === parseInt(menuItemId))
     if (!menuItem) return
 
     const existingItem = selectedItems.find(item => item.menu_item_id === parseInt(menuItemId))
+    const newQuantity = existingItem ? existingItem.quantity + 1 : 1
+
+    // Salvar no backend
+    await saveEventMenuItem(parseInt(menuItemId), newQuantity)
 
     if (existingItem) {
       setSelectedItems(prev =>
         prev.map(item =>
           item.menu_item_id === parseInt(menuItemId)
-            ? { ...item, quantity: item.quantity + 1 }
+            ? { ...item, quantity: newQuantity }
             : item
         )
       )
@@ -141,11 +189,14 @@ export function EventCostCalculator({ eventId, initialGuests = 1, onCostCalculat
     }
   }
 
-  const updateItemQuantity = (menuItemId: number, quantity: number) => {
+  const updateItemQuantity = async (menuItemId: number, quantity: number) => {
     if (quantity <= 0) {
       removeMenuItem(menuItemId)
       return
     }
+
+    // Salvar no backend
+    await saveEventMenuItem(menuItemId, quantity)
 
     setSelectedItems(prev =>
       prev.map(item =>
@@ -156,8 +207,21 @@ export function EventCostCalculator({ eventId, initialGuests = 1, onCostCalculat
     )
   }
 
-  const removeMenuItem = (menuItemId: number) => {
-    setSelectedItems(prev => prev.filter(item => item.menu_item_id !== menuItemId))
+  const removeMenuItem = async (menuItemId: number) => {
+    try {
+      // Remover do backend
+      await eventsAPI.removeEventMenuItem(eventId, menuItemId)
+
+      // Remover do estado local
+      setSelectedItems(prev => prev.filter(item => item.menu_item_id !== menuItemId))
+    } catch (error) {
+      console.error('Erro ao remover item do evento:', error)
+      toast({
+        title: "Erro ao remover",
+        description: "Não foi possível remover o item do evento.",
+        variant: "destructive",
+      })
+    }
   }
 
   const getCategoryBadgeColor = (category: string) => {
@@ -241,26 +305,29 @@ export function EventCostCalculator({ eventId, initialGuests = 1, onCostCalculat
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {selectedItems.map((item) => (
-                    <TableRow key={item.menu_item_id}>
+                  {selectedItems.map((item, index) => (
+                    <TableRow key={`${item.menu_item_id}-${index}`}>
                       <TableCell className="font-medium">{item.menu_item.name}</TableCell>
                       <TableCell>
                         <Badge className={getCategoryBadgeColor(item.menu_item.category)}>
                           {CATEGORY_LABELS[item.menu_item.category as keyof typeof CATEGORY_LABELS]}
                         </Badge>
                       </TableCell>
-                      <TableCell>R$ {item.menu_item.cost_per_person.toFixed(2)}</TableCell>
+                      <TableCell>R$ {Number(item.menu_item.cost_per_person).toFixed(2)}</TableCell>
                       <TableCell>
                         <Input
                           type="number"
                           min="1"
                           value={item.quantity}
-                          onChange={(e) => updateItemQuantity(item.menu_item_id, parseInt(e.target.value) || 1)}
+                          onChange={(e) => {
+                            const newValue = parseInt(e.target.value) || 1
+                            updateItemQuantity(item.menu_item_id, newValue)
+                          }}
                           className="w-20"
                         />
                       </TableCell>
                       <TableCell>
-                        R$ {(item.menu_item.cost_per_person * guests * item.quantity).toFixed(2)}
+                        R$ {(Number(item.menu_item.cost_per_person) * guests * item.quantity).toFixed(2)}
                       </TableCell>
                       <TableCell>
                         <Button
